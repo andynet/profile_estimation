@@ -22,5 +22,6 @@ Test(core, load_variant_loads) {
 }
 
 Test(core, create_id2pangolin_works) {
-    char *metadata_file = "../data/test/subset.meta.tsv";
+    char *metadata_file = "../data/subset.meta.tsv";
+
 }
