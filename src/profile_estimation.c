@@ -1,7 +1,6 @@
 #include <htslib/sam.h>
+#include "../hashing/src/hashing.h"
 #include "functions.c"
-
-typedef struct {} record;
 
 int main(int argc, char** argv) {
     // parse_arguments
@@ -16,8 +15,10 @@ int main(int argc, char** argv) {
     load_variants(variants_file, &variants, &number);
 
     // create_map_id2pangolin(meta)
+    map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
 
     // create_lineage_map
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
 
     int ***table = init_table();
 

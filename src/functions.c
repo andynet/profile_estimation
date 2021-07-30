@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../hashing/src/hashing.h"
+
+typedef struct {
+    char *key;
+    char *value;
+} item;
 
 uint get_n_lines(const char *filename) {
     FILE *fp = fopen(filename, "r");
@@ -51,3 +57,51 @@ void dealloc_variants(char ***variants_ptr, const uint *number_ptr) {
     free((*variants_ptr));
 }
 
+char *read_tsv_rec(const char *line, uint pos) {
+    char *original, *token, *rest;
+
+    original = strdup(line);
+    rest = original;
+
+    for (uint i = 0; (token = strtok_r(rest, "\t", &rest)); i++) {
+        if (i == pos) {
+            strip(token);
+            break;
+        }
+    }
+    return token;
+}
+
+uint hash(const void *item1) {
+    item *i1 = (item *) item1;
+    char *key = i1->key;
+    ulong h = 0;
+    int c;
+    while ((c = *(key++)))
+        h = c + (h << 6) + (h << 16) - h;   // http://www.cse.yorku.ca/~oz/hash.html
+    return h;
+}
+
+int cmp(const void *item1, const void *item2) {
+    item *i1 = (item *) item1;
+    item *i2 = (item *) item2;
+
+    return strcmp(i1->key, i2->key);
+}
+
+map_t get_id2pangolin(const char *filename) {
+    map_t id2pangolin = map_create(1024, hash, cmp);
+
+    FILE *stream = fopen(filename, "r");
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+
+    while ((nread = getline(&line, &len, stream)) != -1) {
+        item *item1 = malloc(sizeof (item));
+        item1->key = read_tsv_rec(line, 0);
+        item1->value = read_tsv_rec(line, 10);
+        map_insert(&id2pangolin, item1);
+    }
+    return id2pangolin;
+}
