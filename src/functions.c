@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <yaml.h>
 #include "../hashing/src/hashing.h"
 
 typedef struct {
     char *key;
     char *value;
-} item;
+} pair_t;
 
 uint get_n_lines(const char *filename) {
     FILE *fp = fopen(filename, "r");
@@ -73,7 +74,7 @@ char *read_tsv_rec(const char *line, uint pos) {
 }
 
 uint hash(const void *item1) {
-    item *i1 = (item *) item1;
+    pair_t *i1 = (pair_t *) item1;
     char *key = i1->key;
     ulong h = 0;
     int c;
@@ -83,8 +84,8 @@ uint hash(const void *item1) {
 }
 
 int cmp(const void *item1, const void *item2) {
-    item *i1 = (item *) item1;
-    item *i2 = (item *) item2;
+    pair_t *i1 = (pair_t *) item1;
+    pair_t *i2 = (pair_t *) item2;
 
     return strcmp(i1->key, i2->key);
 }
@@ -98,10 +99,65 @@ map_t get_id2pangolin(const char *filename) {
     ssize_t nread;
 
     while ((nread = getline(&line, &len, stream)) != -1) {
-        item *item1 = malloc(sizeof (item));
+        pair_t *item1 = malloc(sizeof (pair_t));
         item1->key = read_tsv_rec(line, 0);
         item1->value = read_tsv_rec(line, 10);
         map_insert(&id2pangolin, item1);
     }
     return id2pangolin;
+}
+
+map_t get_pangolin2parent(const char *filename) {
+    map_t pangolin2parent = map_create(1024, hash, cmp);
+
+    FILE *stream = fopen(filename, "r");
+    if(stream == NULL)
+        fputs("Failed to open file!\n", stderr);
+
+    /* Initialize parser */
+    yaml_parser_t parser;
+    yaml_event_t event;
+    if(!yaml_parser_initialize(&parser)) {
+        fputs("Failed to initialize parser!\n", stderr);
+    }
+
+    /* Set input file */
+    yaml_parser_set_input_file(&parser, stream);
+
+    /* CODE HERE */
+    do {
+        if (!yaml_parser_parse(&parser, &event)) {
+            printf("Parser error %d\n", parser.error);
+            exit(EXIT_FAILURE);
+        }
+
+        switch(event.type)
+        {
+            case YAML_NO_EVENT: puts("No event!"); break;
+                /* Stream start/end */
+            case YAML_STREAM_START_EVENT: puts("STREAM START"); break;
+            case YAML_STREAM_END_EVENT:   puts("STREAM END");   break;
+                /* Block delimeters */
+            case YAML_DOCUMENT_START_EVENT: puts("<b>Start Document</b>"); break;
+            case YAML_DOCUMENT_END_EVENT:   puts("<b>End Document</b>");   break;
+            case YAML_SEQUENCE_START_EVENT: puts("<b>Start Sequence</b>"); break;
+            case YAML_SEQUENCE_END_EVENT:   puts("<b>End Sequence</b>");   break;
+            case YAML_MAPPING_START_EVENT:  puts("<b>Start Mapping</b>");  break;
+            case YAML_MAPPING_END_EVENT:    puts("<b>End Mapping</b>");    break;
+                /* Data */
+            case YAML_ALIAS_EVENT:  printf("Got alias (anchor %s)\n", event.data.alias.anchor); break;
+            case YAML_SCALAR_EVENT: printf("Got scalar (value %s)\n", event.data.scalar.value); break;
+        }
+        if(event.type != YAML_STREAM_END_EVENT)
+            yaml_event_delete(&event);
+    } while(event.type != YAML_STREAM_END_EVENT);
+    yaml_event_delete(&event);
+    /* END new code */
+
+
+    /* Cleanup */
+    yaml_parser_delete(&parser);
+    fclose(stream);
+
+    return pangolin2parent;
 }
