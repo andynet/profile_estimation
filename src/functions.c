@@ -198,7 +198,7 @@ void print_map(map_t map) {
     while (item != NULL) {
         idx++;
         map_iterate(map, &idx, &item);
-        pair_print(item);
+        if (item != NULL) pair_print(item);
     }
 }
 

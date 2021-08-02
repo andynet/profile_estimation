@@ -71,35 +71,35 @@ Test(core, get_id2pangolin_random_check) {
     cr_assert(strcmp(item2.value, result.value) == 0);
 }
 
-//Test(core, get_pangolin2parent_random_check) {
-//    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
-//    pair_t result;
-//
-//    pair_t pair1 = { .key = "B.1.1.13", .value = "A" };
-//    result = *(pair_t *) map_search(pangolin2parent, &pair1);
-//    cr_assert(strcmp(pair1.value, result.value) == 0);
-//
-//    pair_t pair2 = { .key = "A.2.5.2", .value = "A.2.5" };
-//    result = *(pair_t *) map_search(pangolin2parent, &pair2);
-//    cr_assert(strcmp(pair2.value, result.value) == 0);
-//}
+Test(core, get_pangolin2parent_random_check) {
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
+    pair_t result;
 
-//Test(core, get_pangolin2parent_small_check) {
-//    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
-//    pair_t result;
-//
-//    pair_t pair1 = { .key = "A.2.5.1", .value = "A.2"};
-//    result = *(pair_t *) map_search(pangolin2parent, &pair1);
-//    cr_assert(strcmp(pair1.value, result.value) == 0);
-//
-//    pair_t pair2 = { .key = "A.2", .value = "A"};
-//    result = *(pair_t *) map_search(pangolin2parent, &pair2);
-//    cr_assert(strcmp(pair2.value, result.value) == 0);
-//
-//    pair_t pair3 = { .key = "A.2.2", .value = "A.2"};
-//    result = *(pair_t *) map_search(pangolin2parent, &pair3);
-//    cr_assert(strcmp(pair3.value, result.value) == 0);
-//}
+    pair_t pair1 = { .key = "AA.1", .value = "B.1.177.15" };
+    result = *(pair_t *) map_search(pangolin2parent, &pair1);
+    cr_assert(strcmp(pair1.value, result.value) == 0);
+
+    pair_t pair2 = { .key = "A.2.5.2", .value = "A.2.5" };
+    result = *(pair_t *) map_search(pangolin2parent, &pair2);
+    cr_assert(strcmp(pair2.value, result.value) == 0);
+}
+
+Test(core, get_pangolin2parent_small_check) {
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    pair_t result;
+
+    pair_t pair1 = { .key = "A.2.5.1", .value = "A.2"};
+    result = *(pair_t *) map_search(pangolin2parent, &pair1);
+    cr_assert(strcmp(pair1.value, result.value) == 0);
+
+    pair_t pair2 = { .key = "A.2", .value = "A"};
+    result = *(pair_t *) map_search(pangolin2parent, &pair2);
+    cr_assert(strcmp(pair2.value, result.value) == 0);
+
+    pair_t pair3 = { .key = "A.2.2", .value = "A.2"};
+    result = *(pair_t *) map_search(pangolin2parent, &pair3);
+    cr_assert(strcmp(pair3.value, result.value) == 0);
+}
 
 Test(core, pair_are_created_correctly) {
     pair_t *pair;
