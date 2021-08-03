@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <yaml.h>
+#include <htslib/sam.h>
 #include "../hashing/src/hashing.h"
 
 typedef struct {
@@ -22,6 +23,27 @@ pair_t *pair_create(char *key, char *value) {
     strcpy(pair->value, value);
     // pair_print(pair);
     return pair;
+}
+
+typedef struct {
+    char *id;
+    char *seq;
+    char *variant;
+} record_t;
+
+record_t *record_create(char *id, uint length) {
+    record_t *record = malloc(sizeof (*record));
+    record->id = malloc(sizeof (*id) * strlen(id));
+    strcpy(record->id, id);
+    record->seq = malloc(sizeof (char) * length);
+    for (uint i=0; i<length; i++) {record->seq[i] = '.';}
+    record->variant = NULL;
+}
+
+void record_print(record_t *record) {
+    printf("%s\t%s\t", record->id, record->seq);
+    if (record->variant == NULL) printf("NULL\n");
+    else printf("%s\n", record->variant);
 }
 
 uint get_n_lines(const char *filename) {
@@ -147,7 +169,6 @@ void insert_children(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin
         child = (char *)event->data.scalar.value;
         pair_t *pair = pair_create(child, name);
 
-        // TODO: searching for item which is not there crashes
         pair_t *found = map_search(*pangolin2parent, pair);
         if (found != NULL) map_delete(*pangolin2parent, found);
 
@@ -233,4 +254,43 @@ map_t get_pangolin2parent(const char *filename) {
     fclose(stream);
 
     return pangolin2parent;
+}
+
+int ***init_3d_array(uint x, uint y, uint z) {
+    int ***res;
+    res = malloc(sizeof (**res) * x);
+    for (uint i=0; i<x; i++) {
+        res[i] = malloc(sizeof (*res) * y);
+        for (uint j=0; j<y; j++) {
+            res[i][j] = malloc(sizeof (res) * z);
+            for (uint k=0; k<z; k++) {
+                res[i][j][k] = 0;
+            }
+        }
+    }
+    return res;
+}
+
+uint get_ref_size(sam_hdr_t *bam_header) {
+    if (bam_header->n_targets > 1) {
+        printf("BAM file is mapped to more than 1 reference. (%d)\n", bam_header->n_targets);
+        exit(EXIT_FAILURE);
+    }
+    return bam_header->target_len[0];
+}
+
+record_t *read_record(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record) {
+    char *qname, *cigar, *seq;
+    qname = bam_get_qname(bam_record);
+    uint ref_size = get_ref_size(bam_header);
+    record_t *result = record_create(qname, ref_size);
+    int ret;
+    do {
+        // cigar = bam_get_cigar(bam_record);
+        char base = bam_seqi(bam_get_seq(bam_record), 0);
+        printf("%s\n", qname);
+        ret = sam_read1(bam_stream, bam_header, bam_record);
+        qname = bam_get_qname(bam_record);
+    } while (ret > 0 && strcmp(qname, result->id) == 0);
+    return result;
 }

@@ -1,16 +1,21 @@
-#include <stdlib.h>
 #include "../src/functions.c"
 
 int main() {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
-    print_map(pangolin2parent);
-    pair_t result;
-
-    pair_t pair1 = { .key = "B.1.1.13", .value = "A" };
-    result = *(pair_t *) map_search(pangolin2parent, &pair1);
-    pair_print(&result);
-
-    pair_t pair2 = { .key = "A.2.5.2", .value = "A.2.5" };
-    result = *(pair_t *) map_search(pangolin2parent, &pair2);
-    pair_print(&result);
+    char *bamfile = "../data/subset.bam";
+    samFile *bam_stream = sam_open(bamfile, "r");
+    sam_hdr_t *bam_header = sam_hdr_read(bam_stream);
+    bam1_t *bam_record = bam_init1();
+    int res = sam_read1(bam_stream, bam_header, bam_record);
+    if (res > 0) {
+        record_t *record = read_record(bam_stream, bam_header, bam_record);
+        // record_print(record);
+        record = read_record(bam_stream, bam_header, bam_record);
+        record = read_record(bam_stream, bam_header, bam_record);
+//        record = read_record(bam_stream, bam_header, bam_record);
+//        record = read_record(bam_stream, bam_header, bam_record);
+//        record = read_record(bam_stream, bam_header, bam_record);
+//        record = read_record(bam_stream, bam_header, bam_record);
+//        record = read_record(bam_stream, bam_header, bam_record);
+    }
+    bam_destroy1(bam_record);
 }

@@ -11,27 +11,29 @@ int main(int argc, char** argv) {
     const char *output          = "../data/test/output.tsv";
 
     char **variants = NULL;
-    uint number = 0;
-    load_variants(variants_file, &variants, &number);
+    uint num_variants = 0;
+    load_variants(variants_file, &variants, &num_variants);
 
-    // create_map_id2pangolin(meta)
     map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
-
-    // create_lineage_map
     map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
 
-    int ***table = init_table();
-
     // open(bam)
-    samFile *fp = sam_open(bamfile, "r");
-    sam_hdr_t *h = sam_hdr_read(fp);
-    bam1_t *b = bam_init1();
-    int res = sam_read1(fp, h, b);
+    samFile *bam_stream = sam_open(bamfile, "r");
+    sam_hdr_t *bam_header = sam_hdr_read(bam_stream);
+    uint ref_size = get_ref_size(bam_header);
+
+    char alphabet[] = {'A', 'C', 'G', 'T', 'N', '-'};
+    uint alphabet_size = 6;
+
+    int ***table = init_3d_array(ref_size, num_variants, alphabet_size);
+
+    bam1_t *bam_record = bam_init1();
+    int res = sam_read1(bam_stream, bam_header, bam_record);
 
     // while not the end:
     while (res >= 0) {
-        record record = read_record(fp, h, b);
-        record.variant = get_variant(record, id2pangolin, lineage_map);
+        record_t *record = read_record(bam_stream, bam_header, bam_record);
+        record->variant = get_variant(record, id2pangolin, pangolin2parent);
         add_counts(table, record);
     }
 

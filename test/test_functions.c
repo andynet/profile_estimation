@@ -105,8 +105,24 @@ Test(core, pair_are_created_correctly) {
     pair_t *pair;
     char *key = "key1";
     pair = pair_create(key, "value1");
-    pair_print(pair);
+    cr_assert(strcmp(pair->key, key) == 0);
+    cr_assert(strcmp(pair->value, "value1") == 0);
     key = "key2";
     pair = pair_create(key, "value2");
-    pair_print(pair);
+    cr_assert(strcmp(pair->key, key) == 0);
+    cr_assert(strcmp(pair->value, "value2") == 0);
+}
+
+Test(core, initialization_of_3d_array_has_expected_dimensions) {
+    int x, y, z;
+    x = 2; y = 3; z = 4;
+    int ***array = init_3d_array(x, y, z);
+    array[0]  [0]  [0]   = 1;
+    array[0]  [0]  [z-1] = 2;
+    array[0]  [y-1][0]   = 3;
+    array[0]  [y-1][z-1] = 4;
+    array[x-1][0]  [0]   = 5;
+    array[x-1][0]  [z-1] = 6;
+    array[x-1][y-1][0]   = 7;
+    array[x-1][y-1][z-1] = 8;
 }

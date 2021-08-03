@@ -12,7 +12,7 @@ add_executable(profile_estimation src/profile_estimation.c)
 target_link_libraries(profile_estimation hts)
 
 add_executable(test_functions test/test_functions.c)
-target_link_libraries(test_functions criterion hashing safe_alloc yaml)
+target_link_libraries(test_functions criterion hashing safe_alloc yaml hts)
 
 add_executable(run test/run.c)
-target_link_libraries(run hashing safe_alloc yaml)
+target_link_libraries(run hashing safe_alloc yaml hts)
