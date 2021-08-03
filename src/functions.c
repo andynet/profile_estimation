@@ -33,7 +33,7 @@ typedef struct {
 
 record_t *record_create(char *id, uint length) {
     record_t *record = malloc(sizeof (*record));
-    record->id = malloc(sizeof (*id) * strlen(id));
+    record->id = malloc(sizeof (*id) * (strlen(id)+1));
     strcpy(record->id, id);
     record->seq = malloc(sizeof (char) * length);
     for (uint i=0; i<length; i++) {record->seq[i] = '.';}
@@ -272,25 +272,33 @@ int ***init_3d_array(uint x, uint y, uint z) {
 }
 
 uint get_ref_size(sam_hdr_t *bam_header) {
-    if (bam_header->n_targets > 1) {
+    if (sam_hdr_nref(bam_header) != 1) {
         printf("BAM file is mapped to more than 1 reference. (%d)\n", bam_header->n_targets);
         exit(EXIT_FAILURE);
     }
     return bam_header->target_len[0];
 }
 
-record_t *read_record(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record) {
+record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record, int *ret) {
     char *qname, *cigar, *seq;
     qname = bam_get_qname(bam_record);
     uint ref_size = get_ref_size(bam_header);
     record_t *result = record_create(qname, ref_size);
-    int ret;
     do {
+        // add_seq(result, bam_record);
         // cigar = bam_get_cigar(bam_record);
         char base = bam_seqi(bam_get_seq(bam_record), 0);
-        printf("%s\n", qname);
-        ret = sam_read1(bam_stream, bam_header, bam_record);
+        // printf("%s\n", qname);
+        (*ret) = sam_read1(bam_stream, bam_header, bam_record);
         qname = bam_get_qname(bam_record);
-    } while (ret > 0 && strcmp(qname, result->id) == 0);
+    } while ((*ret) > 0 && strcmp(qname, result->id) == 0);
     return result;
+}
+
+void record_destroy(record_t *record) {
+    free(record->variant);
+    free(record->seq);
+    free(record->id);
+    free(record);
+    record = NULL;
 }

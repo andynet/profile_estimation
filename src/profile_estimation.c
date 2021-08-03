@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     // while not the end:
     while (res >= 0) {
-        record_t *record = read_record(bam_stream, bam_header, bam_record);
+        record_t *record = record_read(bam_stream, bam_header, bam_record);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
         add_counts(table, record);
     }

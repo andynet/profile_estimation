@@ -126,3 +126,24 @@ Test(core, initialization_of_3d_array_has_expected_dimensions) {
     array[x-1][y-1][0]   = 7;
     array[x-1][y-1][z-1] = 8;
 }
+
+Test(core, is_reading_whole_bam) {
+    samFile *bam_stream = sam_open("../data/subset.bam", "r");
+
+    bam_hdr_t *bam_header = sam_hdr_read(bam_stream);
+    bam1_t *aln = bam_init1();
+
+    int ret, n = 0;
+    ret = sam_read1(bam_stream, bam_header, aln);
+    while (ret > 0) {
+        record_t *record = record_read(bam_stream, bam_header, aln, &ret);
+        record_destroy(record);
+        n++;
+    }
+    cr_assert(ret == -1);
+    cr_assert(n == 1230);
+
+    bam_destroy1(aln);
+    sam_hdr_destroy(bam_header);
+    sam_close(bam_stream);
+}
