@@ -9,7 +9,7 @@ add_library(hashing hashing/src/hashing.h hashing/src/hashing.c)
 add_library(safe_alloc hashing/src/safe_alloc.h hashing/src/safe_alloc.c)
 
 add_executable(profile_estimation src/profile_estimation.c)
-target_link_libraries(profile_estimation hts)
+target_link_libraries(profile_estimation hashing safe_alloc yaml hts)
 
 add_executable(test_functions test/test_functions.c)
 target_link_libraries(test_functions criterion hashing safe_alloc yaml hts)

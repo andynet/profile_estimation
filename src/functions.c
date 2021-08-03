@@ -298,7 +298,7 @@ char *get_aln_seq(bam1_t *aln) {
 void record_add_aln(record_t *record, bam1_t *aln) {
     char *ref_seq = record->seq;
     uint  ref_pos = aln->core.pos;
-    void *aln_seq = get_aln_seq(aln);
+    char *aln_seq = get_aln_seq(aln);
     uint  aln_pos = 0;
 
     uint n_cigars = aln->core.n_cigar;
@@ -348,4 +348,16 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
         qname = bam_get_qname(bam_record);
     } while ((*ret) > 0 && strcmp(qname, result->id) == 0);
     return result;
+}
+
+char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
+    pair_t *pair = pair_create(record->id, "");
+    pair_t *result = map_search(id2pangolin, pair); // TODO: BUG - this returns the object in map which is then changed
+    while (strcmp(pair->key, result->value) != 0) {
+        pair->key = result->value;
+        result = map_search(pangolin2parent, pair);
+        result = map_search(pangolin2parent, pair);
+        if (result == NULL) return NULL;
+    }
+    return result->key;
 }

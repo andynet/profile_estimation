@@ -4,11 +4,11 @@
 
 int main(int argc, char** argv) {
     // parse_arguments
-    const char *bamfile         = "../data/test/subset.bam";
-    const char *metadata        = "../data/test/metadata.tsv";
-    const char *variants_file   = "../data/test/variants.txt";
-    const char *lineages        = "../data/test/lineages.yaml";
-    const char *output          = "../data/test/output.tsv";
+    const char *bamfile         = "../data/subset.bam";
+    const char *metadata        = "../data/metadata.tsv";
+    const char *variants_file   = "../data/variants.txt";
+    const char *lineages        = "../data/lineages.yaml";
+    const char *output          = "../data/output.tsv";
 
     char **variants = NULL;
     uint num_variants = 0;
@@ -27,24 +27,22 @@ int main(int argc, char** argv) {
 
     int ***table = init_3d_array(ref_size, num_variants, alphabet_size);
 
-    bam1_t *bam_record = bam_init1();
-    int res = sam_read1(bam_stream, bam_header, bam_record);
-
-    // while not the end:
-    while (res >= 0) {
-        record_t *record = record_read(bam_stream, bam_header, bam_record);
+    int ret;
+    bam1_t *aln = bam_init1();
+    ret = sam_read1(bam_stream, bam_header, aln);
+    while (ret > 0) {
+        record_t *record = record_read(bam_stream, bam_header, aln, &ret);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
-        add_counts(table, record);
+        // add_counts(table, record);
+        if (record->variant == NULL) printf("%s\tNULL\n", record->id);
+        else printf("%s\t%s\n", record->id, record->variant);
+        record_destroy(record);
     }
+    exit(EXIT_SUCCESS);
+    bam_destroy1(aln);
+    sam_hdr_destroy(bam_header);
+    sam_close(bam_stream);
 
-    store(table, output);
+    // store(table, output);
     free(table);
-
-//        << bam_get_qname(b) << '\n'
-//        << bam_get_cigar(b) << '\n'
-//        << bam_get_seq(b)   << '\n'
-//        << bam_get_qual(b)  << '\n'
-//        << bam_get_aux(b)   << '\n'
-//        ;
-        // bam_get_qname, bam_get_cigar, bam_get_seq, bam_get_qual and bam_get_aux
 }
