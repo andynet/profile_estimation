@@ -302,3 +302,13 @@ void record_destroy(record_t *record) {
     free(record);
     record = NULL;
 }
+
+void record_add_aln(record_t *record, bam1_t *aln) {
+    uint32_t n_cigars = aln->core.n_cigar;
+    uint32_t *cigar = bam_get_cigar(aln);
+    for (uint i = 0; i < n_cigars; i++) {
+        char op = bam_cigar_opchr(cigar[i]);
+        uint32_t oplen = bam_cigar_oplen(cigar[i]);
+        printf("%c\t%d\n", op, oplen);
+    }
+}
