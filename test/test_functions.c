@@ -147,3 +147,33 @@ Test(core, is_reading_whole_bam) {
     sam_hdr_destroy(bam_header);
     sam_close(bam_stream);
 }
+
+Test(core, record_read_reads_correct_sequences_random_check) {
+    samFile *bam_stream = sam_open("../data/subset.bam", "r");
+
+    bam_hdr_t *bam_header = sam_hdr_read(bam_stream);
+    bam1_t *aln = bam_init1();
+
+    int ret;
+    record_t *record;
+    ret = sam_read1(bam_stream, bam_header, aln);
+
+    record = record_read(bam_stream, bam_header, aln, &ret);
+    cr_assert(strcmp(record->id, "hCoV-19/England/CAMB-755E9/2020") == 0);
+    cr_assert(record->seq[120] == 'C');
+    record_destroy(record);
+
+    record = record_read(bam_stream, bam_header, aln, &ret);
+    cr_assert(strcmp(record->id, "hCoV-19/Iran/Qom255194/2020") == 0);
+    cr_assert(record->seq[160] == '.');
+    record_destroy(record);
+
+    record = record_read(bam_stream, bam_header, aln, &ret);
+    cr_assert(strcmp(record->id, "hCoV-19/Australia/NSW153/2020") == 0);
+    cr_assert(record->seq[29040] == 'G');
+    record_destroy(record);
+
+    bam_destroy1(aln);
+    sam_hdr_destroy(bam_header);
+    sam_close(bam_stream);
+}

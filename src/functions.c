@@ -41,7 +41,7 @@ record_t *record_create(char *id, uint length) {
 }
 
 void record_print(record_t *record) {
-    printf("%s\t%s\t", record->id, record->seq);
+    printf("%-32.32s\t%s\t", record->id, record->seq);
     if (record->variant == NULL) printf("NULL\n");
     else printf("%s\n", record->variant);
 }
@@ -279,22 +279,6 @@ uint get_ref_size(sam_hdr_t *bam_header) {
     return bam_header->target_len[0];
 }
 
-record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record, int *ret) {
-    char *qname, *cigar, *seq;
-    qname = bam_get_qname(bam_record);
-    uint ref_size = get_ref_size(bam_header);
-    record_t *result = record_create(qname, ref_size);
-    do {
-        // add_seq(result, bam_record);
-        // cigar = bam_get_cigar(bam_record);
-        char base = bam_seqi(bam_get_seq(bam_record), 0);
-        // printf("%s\n", qname);
-        (*ret) = sam_read1(bam_stream, bam_header, bam_record);
-        qname = bam_get_qname(bam_record);
-    } while ((*ret) > 0 && strcmp(qname, result->id) == 0);
-    return result;
-}
-
 void record_destroy(record_t *record) {
     free(record->variant);
     free(record->seq);
@@ -303,12 +287,65 @@ void record_destroy(record_t *record) {
     record = NULL;
 }
 
+char *get_aln_seq(bam1_t *aln) {
+    uint n = aln->core.l_qseq;
+    char *result = malloc(n);
+    for (uint i=0; i < n; i++)
+        result[i] = seq_nt16_str[bam_seqi(bam_get_seq(aln), i)];
+    return result;
+}
+
 void record_add_aln(record_t *record, bam1_t *aln) {
-    uint32_t n_cigars = aln->core.n_cigar;
+    char *ref_seq = record->seq;
+    uint  ref_pos = aln->core.pos;
+    void *aln_seq = get_aln_seq(aln);
+    uint  aln_pos = 0;
+
+    uint n_cigars = aln->core.n_cigar;
     uint32_t *cigar = bam_get_cigar(aln);
+
     for (uint i = 0; i < n_cigars; i++) {
         char op = bam_cigar_opchr(cigar[i]);
         uint32_t oplen = bam_cigar_oplen(cigar[i]);
-        printf("%c\t%d\n", op, oplen);
+
+        switch (op) // MIDNSHP=XB
+        {
+            case 'M':
+                strncpy(&(ref_seq[ref_pos]), &aln_seq[aln_pos], oplen);
+                ref_pos += oplen;
+                aln_pos += oplen;
+                break;
+            case 'I':
+                aln_pos += oplen;
+                break;
+            case 'D':
+                for (uint j=0; j < oplen; j++)
+                    ref_seq[ref_pos + j] = '-';
+                ref_pos += oplen;
+                break;
+            case 'S':
+                aln_pos += oplen;
+                break;
+            case 'H':
+                // intentionally do nothing
+                break;
+            default:
+                printf("Operator %c not implemented.", op);
+        }
     }
+    free(aln_seq);
+    aln_seq = NULL;
+}
+
+record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record, int *ret) {
+    char *qname, *cigar, *seq;
+    qname = bam_get_qname(bam_record);
+    uint ref_size = get_ref_size(bam_header);
+    record_t *result = record_create(qname, ref_size);
+    do {
+        record_add_aln(result, bam_record);
+        (*ret) = sam_read1(bam_stream, bam_header, bam_record);
+        qname = bam_get_qname(bam_record);
+    } while ((*ret) > 0 && strcmp(qname, result->id) == 0);
+    return result;
 }
