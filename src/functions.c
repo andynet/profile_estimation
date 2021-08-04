@@ -12,7 +12,7 @@ typedef struct {
 
 void pair_print(pair_t *pair) {
     if (pair == NULL) printf("NULL\n");
-    else printf("%s\t%s\n", pair->key, pair->value);
+    else printf("%-10s\t%-10s\n", pair->key, pair->value);
 }
 
 pair_t *pair_create(char *key, char *value) {
@@ -159,6 +159,7 @@ map_t get_id2pangolin(const char *filename) {
         map_insert(&id2pangolin, item1);
     }
     free(line);
+    fclose(stream);
     return id2pangolin;
 }
 
@@ -170,6 +171,7 @@ void yaml_parser_parse_checked(yaml_parser_t *parser, yaml_event_t *event) {
 }
 
 char *get_name(yaml_parser_t *parser, yaml_event_t *event) {
+    yaml_event_delete(event);
     yaml_parser_parse_checked(parser, event);
     char *tmp = (char *)event->data.scalar.value;
     char *result = malloc(sizeof (*result) * (strlen(tmp) + 1));
@@ -180,6 +182,7 @@ char *get_name(yaml_parser_t *parser, yaml_event_t *event) {
 
 void insert_children(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin2parent, char *name) {
     char *child;
+    yaml_event_delete(event);
     yaml_parser_parse_checked(parser, event);
     yaml_event_delete(event);
     yaml_parser_parse_checked(parser, event);
@@ -197,20 +200,22 @@ void insert_children(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin
         yaml_event_delete(event);
         yaml_parser_parse_checked(parser, event);
     }
-    yaml_event_delete(event);
 }
 
 void insert_parent(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin2parent, char *name) {
     char *parent;
+    yaml_event_delete(event);
     yaml_parser_parse_checked(parser, event);
     parent = (char *)event->data.scalar.value;
     pair_t *pair = pair_create(name, parent);
 
     pair_t *found = map_search(*pangolin2parent, pair);
-    if (found != NULL) map_delete(*pangolin2parent, found);
+    if (found != NULL) {
+        map_delete(*pangolin2parent, found);
+        pair_free(found);
+    }
 
     map_insert(pangolin2parent, pair);
-    yaml_event_delete(event);
 }
 
 void process_mapping(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin2parent) {
@@ -251,29 +256,23 @@ map_t get_pangolin2parent(const char *filename) {
     map_t pangolin2parent = map_create(32, hash, cmp);
 
     FILE *stream = fopen(filename, "r");
-    if(stream == NULL)
-        fputs("Failed to open file!\n", stderr);
+    if(stream == NULL) fputs("Failed to open file!\n", stderr);
 
-    /* Initialize parser */
     yaml_parser_t parser;
-    yaml_event_t event;
-    if(!yaml_parser_initialize(&parser)) {
-        fputs("Failed to initialize parser!\n", stderr);
-    }
-
-    /* Set input file */
+    if(!yaml_parser_initialize(&parser)) fputs("Failed to initialize parser!\n", stderr);
     yaml_parser_set_input_file(&parser, stream);
 
-    /* start processing */
-    do {
-        yaml_parser_parse_checked(&parser, &event);
+    yaml_event_t event;
+    yaml_parser_parse_checked(&parser, &event);
+    while (event.type != YAML_STREAM_END_EVENT) {
         if (event.type == YAML_MAPPING_START_EVENT) {
             process_mapping(&parser, &event, &pangolin2parent);
         }
-    } while (event.type != YAML_STREAM_END_EVENT);
+        yaml_event_delete(&event);
+        yaml_parser_parse_checked(&parser, &event);
+    }
     yaml_event_delete(&event);
 
-    /* Cleanup */
     yaml_parser_delete(&parser);
     fclose(stream);
 

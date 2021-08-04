@@ -16,3 +16,6 @@ target_link_libraries(test_functions criterion hashing safe_alloc yaml hts)
 
 add_executable(run test/run.c)
 target_link_libraries(run hashing safe_alloc yaml hts)
+
+add_executable(leak test/leak.c)
+target_link_libraries(leak hashing safe_alloc yaml hts)

@@ -101,6 +101,12 @@ Test(core, get_pangolin2parent_small_check) {
     cr_assert(strcmp(pair3.value, result.value) == 0);
 }
 
+Test(core, get_pangolin2parent_does_not_leak) {
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    free_map_content(&pangolin2parent);
+    map_destroy(&pangolin2parent);
+}
+
 Test(core, pair_are_created_correctly) {
     pair_t *pair;
     char *key = "key1";
