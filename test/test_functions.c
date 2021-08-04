@@ -38,6 +38,17 @@ Test(core, read_tsv_rec_returns_correct_value) {
     cr_assert(token == NULL);
 }
 
+Test(core, read_tsv_rec_works_with_multiple_tabs) {
+    char *token;
+    char *line = "A\t\tC\n";
+    token = read_tsv_rec(line, 0);
+    cr_assert(strcmp(token, "A") == 0);
+    token = read_tsv_rec(line, 1);
+    cr_assert(strcmp(token, "") == 0);
+    token = read_tsv_rec(line, 2);
+    cr_assert(strcmp(token, "C") == 0);
+}
+
 Test(core, items_are_hashed_correctly) {
     pair_t item1 = { .key = "test1_key", .value = "test1_value"};
     pair_t item2 = { .key = "test2_key", .value = "test2_value"};
@@ -191,22 +202,22 @@ Test(core, get_variants_returns_correct_variants) {
 
     record = record_create("hCoV-19/England/CAMB-755E9/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
-    record_print(record);
+    cr_assert(strcmp(record->variant, "A") == 0);
     record_destroy(record);
 
     record = record_create("hCoV-19/Iran/Qom255194/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
-    record_print(record);
+    cr_assert(record->variant == NULL);
     record_destroy(record);
 
     record = record_create("hCoV-19/Australia/NSW153/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
-    record_print(record);
+    cr_assert(strcmp(record->variant, "A") == 0);
     record_destroy(record);
 
     record = record_create("hCoV-19/Guangzhou/GZMU0034/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
-    record_print(record);
+    cr_assert(strcmp(record->variant, "A") == 0);
     record_destroy(record);
 
     free_map_content(&pangolin2parent);

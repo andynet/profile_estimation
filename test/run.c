@@ -5,6 +5,8 @@ int main() {
     map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
     map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
 
+    print_map(id2pangolin);
+
     record = record_create("hCoV-19/England/CAMB-755E9/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
     record_print(record);
