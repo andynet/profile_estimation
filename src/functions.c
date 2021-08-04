@@ -17,12 +17,18 @@ void pair_print(pair_t *pair) {
 
 pair_t *pair_create(char *key, char *value) {
     pair_t *pair = malloc(sizeof (*pair));
-    pair->key = malloc(sizeof (*key) * strlen(key));
+    pair->key = malloc(sizeof (*key) * (strlen(key) + 1));
     strcpy(pair->key, key);
-    pair->value = malloc(sizeof (*value) * strlen(value));
+    pair->value = malloc(sizeof (*value) * (strlen(value) + 1));
     strcpy(pair->value, value);
-    // pair_print(pair);
     return pair;
+}
+
+void pair_free(pair_t *pair) {
+    free(pair->key);
+    free(pair->value);
+    free(pair);
+    pair = NULL;
 }
 
 typedef struct {
@@ -35,9 +41,11 @@ record_t *record_create(char *id, uint length) {
     record_t *record = malloc(sizeof (*record));
     record->id = malloc(sizeof (*id) * (strlen(id)+1));
     strcpy(record->id, id);
-    record->seq = malloc(sizeof (char) * length);
+    record->seq = malloc(sizeof (char) * (length+1));
     for (uint i=0; i<length; i++) {record->seq[i] = '.';}
+    record->seq[length] = '\0';
     record->variant = NULL;
+    return record;
 }
 
 void record_print(record_t *record) {
@@ -107,7 +115,16 @@ char *read_tsv_rec(const char *line, uint pos) {
             break;
         }
     }
-    return token;
+
+    if (token == NULL) {
+        free(original);
+        return NULL;
+    } else {
+        char *result = malloc(strlen(token) + 1);
+        strcpy(result, token);
+        free(original);
+        return result;
+    }
 }
 
 uint hash(const void *item1) {
@@ -141,6 +158,7 @@ map_t get_id2pangolin(const char *filename) {
         item1->value = read_tsv_rec(line, 10);
         map_insert(&id2pangolin, item1);
     }
+    free(line);
     return id2pangolin;
 }
 
@@ -154,7 +172,7 @@ void yaml_parser_parse_checked(yaml_parser_t *parser, yaml_event_t *event) {
 char *get_name(yaml_parser_t *parser, yaml_event_t *event) {
     yaml_parser_parse_checked(parser, event);
     char *tmp = (char *)event->data.scalar.value;
-    char *result = malloc(sizeof (*result) * strlen(tmp));
+    char *result = malloc(sizeof (*result) * (strlen(tmp) + 1));
     strcpy(result, tmp);
     yaml_event_delete(event);
     return result;
@@ -170,12 +188,16 @@ void insert_children(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin
         pair_t *pair = pair_create(child, name);
 
         pair_t *found = map_search(*pangolin2parent, pair);
-        if (found != NULL) map_delete(*pangolin2parent, found);
+        if (found != NULL) {
+            map_delete(*pangolin2parent, found);
+            pair_free(found);
+        }
 
         map_insert(pangolin2parent, pair);
         yaml_event_delete(event);
         yaml_parser_parse_checked(parser, event);
     }
+    yaml_event_delete(event);
 }
 
 void insert_parent(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin2parent, char *name) {
@@ -209,6 +231,8 @@ void process_mapping(yaml_parser_t *parser, yaml_event_t *event, map_t *pangolin
         yaml_event_delete(event);
         yaml_parser_parse_checked(parser, event);
     }
+    yaml_event_delete(event);
+    free(name);
 }
 
 void print_map(map_t map) {
@@ -254,6 +278,17 @@ map_t get_pangolin2parent(const char *filename) {
     fclose(stream);
 
     return pangolin2parent;
+}
+
+void free_map_content(map_t *map) {
+    uint idx = 0;
+    pair_t *pair = NULL;
+    map_iterate(*map, &idx, (void **)&pair);
+    while (pair != NULL) {
+        pair_free(pair);
+        idx++;
+        map_iterate(*map, &idx, (void **)&pair);
+    }
 }
 
 int ***init_3d_array(uint x, uint y, uint z) {
@@ -351,13 +386,27 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
 }
 
 char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
-    pair_t *pair = pair_create(record->id, "");
-    pair_t *result = map_search(id2pangolin, pair); // TODO: BUG - this returns the object in map which is then changed
-    while (strcmp(pair->key, result->value) != 0) {
-        pair->key = result->value;
+    pair_t *pair;
+    pair_t const *result;   // type declarations are read right-to-left -> pointer to constant pair_t
+
+    pair = pair_create(record->id, "................");
+    result = map_search(id2pangolin, pair);
+    strcpy(pair->value, result->value);
+
+    do {
+        strcpy(pair->key, pair->value);
+        // print_map(pangolin2parent);
+        // printf("\n");
         result = map_search(pangolin2parent, pair);
-        result = map_search(pangolin2parent, pair);
-        if (result == NULL) return NULL;
-    }
-    return result->key;
+        if (result == NULL) {
+            pair_free(pair);
+            return NULL;
+        }
+        strcpy(pair->value, result->value);
+    } while (strcmp(pair->key, pair->value) != 0);
+
+    char *res = malloc(strlen(pair->key) + 1);
+    strcpy(res, pair->key);
+    pair_free(pair);
+    return res;
 }
