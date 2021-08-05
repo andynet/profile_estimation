@@ -48,6 +48,17 @@ record_t *record_create(char *id, uint length) {
     return record;
 }
 
+record_t *record_full_create(char *id, char *seq, char *variant) {
+    record_t *record = malloc(sizeof (*record));
+    record->id = malloc(sizeof (*id) * (strlen(id) + 1));
+    strcpy(record->id, id);
+    record->seq = malloc(sizeof (*seq) * (strlen(seq) + 1));
+    strcpy(record->seq, seq);
+    record->variant = malloc( sizeof (*variant) * (strlen(variant) + 1));
+    strcpy(record->variant, variant);
+    return record;
+}
+
 void record_print(record_t *record) {
     printf("%-32.32s\t%s\t", record->id, record->seq);
     if (record->variant == NULL) printf("NULL\n");
@@ -308,8 +319,8 @@ void free_map_content(map_t *map) {
     }
 }
 
-int ***init_3d_array(uint x, uint y, uint z) {
-    int ***res;
+uint ***init_3d_array(uint x, uint y, uint z) {
+    uint ***res;
     res = malloc(sizeof (**res) * x);
     for (uint i=0; i<x; i++) {
         res[i] = malloc(sizeof (*res) * y);
@@ -321,6 +332,28 @@ int ***init_3d_array(uint x, uint y, uint z) {
         }
     }
     return res;
+}
+
+void array_3d_print(uint ***array_3d, uint x, uint y, uint z, char **variants, char *alphabet) {
+    // variant, pos, letter, count
+    for (uint j=0; j<y; j++) {
+        for (uint i=0; i<x; i++) {
+            for (uint k=0; k<z; k++) {
+                printf("%s,%d,%c,%d\n", variants[j], i, alphabet[k], array_3d[i][j][k]);
+                // printf("array_3d[%d][%d][%d] = %d\n", i, j, k, array_3d[i][j][k]);
+            }
+        }
+    }
+}
+
+void array_3d_free(uint ***array_3d, uint x, uint y, uint z) {
+    for (uint i=0; i<x; i++) {
+        for (uint j=0; j<y; j++) {
+            free(array_3d[i][j]);
+        }
+        free(array_3d[i]);
+    }
+    free(array_3d);
 }
 
 uint get_ref_size(sam_hdr_t *bam_header) {
@@ -426,4 +459,16 @@ char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     strcpy(res, pair->key);
     pair_free(pair);
     return res;
+}
+
+void add_counts(uint ***table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
+    for (uint i=0; i<ref_size; i++) {
+        for (uint j=0; j<num_variants; j++) {
+            for (uint k=0; k<alphabet_size; k++) {
+                if (strcmp(record->variant, variants[j]) == 0 && alphabet[k] == record->seq[i]) {
+                    table[i][j][k]++;
+                }
+            }
+        }
+    }
 }

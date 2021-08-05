@@ -130,20 +130,6 @@ Test(core, pair_are_created_correctly) {
     cr_assert(strcmp(pair->value, "value2") == 0);
 }
 
-Test(core, initialization_of_3d_array_has_expected_dimensions) {
-    int x, y, z;
-    x = 2; y = 3; z = 4;
-    int ***array = init_3d_array(x, y, z);
-    array[0]  [0]  [0]   = 1;
-    array[0]  [0]  [z-1] = 2;
-    array[0]  [y-1][0]   = 3;
-    array[0]  [y-1][z-1] = 4;
-    array[x-1][0]  [0]   = 5;
-    array[x-1][0]  [z-1] = 6;
-    array[x-1][y-1][0]   = 7;
-    array[x-1][y-1][z-1] = 8;
-}
-
 Test(core, is_reading_whole_bam) {
     samFile *bam_stream = sam_open("../data/subset.bam", "r");
 
@@ -225,4 +211,44 @@ Test(core, get_variants_returns_correct_variants) {
 
     free_map_content(&id2pangolin);
     map_destroy(&id2pangolin);
+}
+
+Test(core, add_counts_works_random_check) {
+    uint num_variants = 2;
+    char *variants[] = {"A", "B"};
+
+    uint alphabet_size = 6;
+    char alphabet[] = {'A', 'C', 'G', 'T', 'N', '-'};
+
+    uint ref_size = 4;
+
+    uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
+    record_t *record;
+
+    record = record_full_create("seq1", "AAAA", "A");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    record = record_full_create("seq3", "CAAC", "A");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    record = record_full_create("seq2", "CGTA", "B");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    record = record_full_create("seq4", ".-NU", "B");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    record = record_full_create("seq5", "ACGT", "C");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    cr_assert(table[0][0][0] == 1);
+    cr_assert(table[1][0][0] == 2);
+    cr_assert(table[0][1][1] == 1);
+    cr_assert(table[1][1][5] == 1);
+    // array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet);
+    array_3d_free(table, ref_size, num_variants, alphabet_size);
 }
