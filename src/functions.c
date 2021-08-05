@@ -103,13 +103,31 @@ void dealloc_variants(char ***variants_ptr, const uint *number_ptr) {
     free((*variants_ptr));
 }
 
+char *tokenize(char *str, const char *delim, char **rest_ptr) {
+    char *end;
+    if (str == NULL) str = *rest_ptr;
+    if (*str == '\0') {
+        *rest_ptr = str;
+        return NULL;
+    }
+    end = str + strcspn(str, delim);
+    if (*end == '\0') {
+        *rest_ptr = end;
+        return str;
+    }
+    *end = '\0';
+    *rest_ptr = end + 1;
+    return str;
+}
+
 char *read_tsv_rec(const char *line, uint pos) {
     char *original, *token, *rest;
 
     original = strdup(line);
     rest = original;
 
-    for (uint i = 0; (token = strtok_r(rest, "\t", &rest)); i++) {
+    // for (uint i = 0; (token = strtok_r(rest, "\t", &rest)); i++) {
+    for (uint i = 0; (token = tokenize(rest, "\t", &rest)); i++) {
         if (i == pos) {
             strip(token);
             break;
@@ -155,7 +173,7 @@ map_t get_id2pangolin(const char *filename) {
     while ((nread = getline(&line, &len, stream)) != -1) {
         pair_t *item1 = malloc(sizeof (pair_t));
         item1->key = read_tsv_rec(line, 0);
-        item1->value = read_tsv_rec(line, 10);
+        item1->value = read_tsv_rec(line, 11);
         map_insert(&id2pangolin, item1);
     }
     free(line);
