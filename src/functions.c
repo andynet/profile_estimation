@@ -314,6 +314,47 @@ map_t get_pangolin2parent(const char *filename) {
     return pangolin2parent;
 }
 
+//void add_root(map_t pangolin2parent, char *variant) {
+//    uint idx = 0;
+//    void *item = NULL;
+//    map_iterate(pangolin2parent, &idx, &item);
+//    pair_t *pair = (pair_t *)item;
+//    pair->value
+//}
+
+pair_t *get_root(pair_t *pair, map_t pangolin2parent) {
+    pair_t *result;
+    do {
+        strcpy(pair->key, pair->value);
+        // print_map(pangolin2parent);
+        // printf("\n");
+        result = map_search(pangolin2parent, pair);
+        if (result == NULL) {
+            pair_free(pair);
+            return NULL;
+        }
+        strcpy(pair->value, result->value);
+    } while (strcmp(pair->key, pair->value) != 0);
+    return pair;
+}
+
+char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
+    pair_t *pair;
+    pair_t const *result;   // type declarations are read right-to-left -> pointer to constant pair_t
+
+    pair = pair_create(record->id, "................");
+    result = map_search(id2pangolin, pair);
+    strcpy(pair->value, result->value);
+
+    pair = get_root(pair, pangolin2parent);
+    if (pair == NULL) return NULL;
+
+    char *res = malloc(strlen(pair->key) + 1);
+    strcpy(res, pair->key);
+    pair_free(pair);
+    return res;
+}
+
 void free_map_content(map_t *map) {
     uint idx = 0;
     pair_t *pair = NULL;
@@ -439,32 +480,6 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
         qname = bam_get_qname(bam_record);
     } while ((*ret) > 0 && strcmp(qname, result->id) == 0);
     return result;
-}
-
-char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
-    pair_t *pair;
-    pair_t const *result;   // type declarations are read right-to-left -> pointer to constant pair_t
-
-    pair = pair_create(record->id, "................");
-    result = map_search(id2pangolin, pair);
-    strcpy(pair->value, result->value);
-
-    do {
-        strcpy(pair->key, pair->value);
-        // print_map(pangolin2parent);
-        // printf("\n");
-        result = map_search(pangolin2parent, pair);
-        if (result == NULL) {
-            pair_free(pair);
-            return NULL;
-        }
-        strcpy(pair->value, result->value);
-    } while (strcmp(pair->key, pair->value) != 0);
-
-    char *res = malloc(strlen(pair->key) + 1);
-    strcpy(res, pair->key);
-    pair_free(pair);
-    return res;
 }
 
 void add_counts(uint ***table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
