@@ -11,14 +11,25 @@ Test(core, get_num_lines_returns_correct_value) {
 Test(core, load_variant_loads) {
     // Why can't I use const in the test?
     // const char *variants_file = "../data/test/variants.txt";
-    char **variants;
-    uint number;
+    char **variants = NULL;
+    uint number = 0;
 
     load_variants("../data/variants.txt", &variants, &number);
     cr_assert(strcmp(variants[0], "B.1.1.7") == 0);
     cr_assert(strcmp(variants[1], "B.1.160") == 0);
     cr_assert(strcmp(variants[2], "B.1.177") == 0);
     cr_assert(strcmp(variants[3], "B.1.258") == 0);
+}
+
+Test(core, add_variant_adds_variants_and_increases_counter) {
+    char **variants = NULL;
+    uint number = 0;
+
+    load_variants("../data/variants.txt", &variants, &number);
+    add_variant(&variants, &number, "other");
+
+    cr_assert(strcmp(variants[4], "other") == 0);
+    cr_assert(number == 5);
 }
 
 Test(core, read_tsv_rec_returns_correct_value) {

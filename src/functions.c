@@ -90,7 +90,7 @@ void strip(char *str) {
 
 void load_variants(const char *filename, char ***variants_ptr, uint *number_ptr) {
     FILE *stream = fopen(filename, "r");
-    (*variants_ptr) = (char **) malloc(sizeof (**variants_ptr) * 8);
+    (*variants_ptr) = (char **) malloc(sizeof (**variants_ptr) * 8);    // TODO: WTF
 
     char *line = NULL;
     size_t len = 0;
@@ -105,6 +105,12 @@ void load_variants(const char *filename, char ***variants_ptr, uint *number_ptr)
     line = NULL;
 
     fclose(stream);
+}
+
+void add_variant(char ***variants_ptr, uint *number_ptr, char *variant) {
+    (*variants_ptr)[*number_ptr] = malloc(strlen(variant) + 1);
+    strcpy((*variants_ptr)[*number_ptr], variant);
+    (*number_ptr)++;
 }
 
 void dealloc_variants(char ***variants_ptr, const uint *number_ptr) {
@@ -334,12 +340,12 @@ uint ***init_3d_array(uint x, uint y, uint z) {
     return res;
 }
 
-void array_3d_print(uint ***array_3d, uint x, uint y, uint z, char **variants, char *alphabet) {
+void array_3d_print(uint ***array_3d, uint x, uint y, uint z, char **variants, char *alphabet, FILE *out) {
     // variant, pos, letter, count
     for (uint j=0; j<y; j++) {
         for (uint i=0; i<x; i++) {
             for (uint k=0; k<z; k++) {
-                printf("%s,%d,%c,%d\n", variants[j], i, alphabet[k], array_3d[i][j][k]);
+                fprintf(out, "%s\t%d\t%c\t%d\n", variants[j], i, alphabet[k], array_3d[i][j][k]);
                 // printf("array_3d[%d][%d][%d] = %d\n", i, j, k, array_3d[i][j][k]);
             }
         }
