@@ -323,19 +323,19 @@ map_t get_pangolin2parent(const char *filename) {
 //}
 
 pair_t *get_root(pair_t *pair, map_t pangolin2parent) {
-    pair_t *result;
+    pair_t *pair_copy = pair_create(pair->key, pair->value);
+    pair_t *result = NULL;
     do {
-        strcpy(pair->key, pair->value);
-        // print_map(pangolin2parent);
-        // printf("\n");
-        result = map_search(pangolin2parent, pair);
+        strcpy(pair_copy->key, pair_copy->value);
+        result = map_search(pangolin2parent, pair_copy);
         if (result == NULL) {
-            pair_free(pair);
+            pair_free(pair_copy);
             return NULL;
         }
-        strcpy(pair->value, result->value);
-    } while (strcmp(pair->key, pair->value) != 0);
-    return pair;
+        strcpy(pair_copy->value, result->value);
+    } while (strcmp(pair_copy->key, pair_copy->value) != 0);
+    pair_free(pair_copy);
+    return result;
 }
 
 char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
@@ -346,11 +346,12 @@ char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     result = map_search(id2pangolin, pair);
     strcpy(pair->value, result->value);
 
-    pair = get_root(pair, pangolin2parent);
-    if (pair == NULL) return NULL;
+    result = get_root(pair, pangolin2parent);
+    // get_root(pair, pangolin2parent);
+    if (result == NULL) return NULL;
 
-    char *res = malloc(strlen(pair->key) + 1);
-    strcpy(res, pair->key);
+    char *res = malloc(strlen(result->key) + 1);
+    strcpy(res, result->key);
     pair_free(pair);
     return res;
 }

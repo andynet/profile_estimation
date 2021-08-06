@@ -2,8 +2,7 @@
 
 int main() {
     map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
-    print_map(pangolin2parent);
-    pair_t *pair;
+    pair_t *pair, *root;
 
     uint idx = 0;
     void *item = NULL;
@@ -12,16 +11,20 @@ int main() {
     idx++;
     while (item != NULL) {
         pair = (pair_t *)item;
-        pair = get_root(pair, pangolin2parent);
-        // cr_assert(strcmp(pair->key, pair->value) == 0);
-        // cr_assert(strcmp(pair->key, "A") == 0);
+        root = get_root(pair, pangolin2parent);
+//        cr_assert(strcmp(root->key, root->value) == 0);
+//        cr_assert(strcmp(root->key, "A") == 0);
 
         map_iterate(pangolin2parent, &idx, &item);
         idx++;
     }
 
     pair = pair_create("B", "B");
-    pair = get_root(pair, pangolin2parent);
-    // cr_assert(pair == NULL);
+    root = get_root(pair, pangolin2parent);
+//    cr_assert(root == NULL);
+    pair_free(pair);
+
+    free_map_content(&pangolin2parent);
+    map_destroy(&pangolin2parent);
 }
 
