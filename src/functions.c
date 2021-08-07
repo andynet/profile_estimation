@@ -17,9 +17,10 @@ void pair_print(pair_t *pair) {
 
 pair_t *pair_create(char *key, char *value) {
     pair_t *pair = malloc(sizeof (*pair));
-    pair->key = malloc(sizeof (*key) * (strlen(key) + 1));
+    // malloc needs to be big enough for all possible pangolin IDs
+    pair->key = malloc(sizeof (*key) * (strlen(key) + 10));
     strcpy(pair->key, key);
-    pair->value = malloc(sizeof (*value) * (strlen(value) + 1));
+    pair->value = malloc(sizeof (*value) * (strlen(value) + 10));
     strcpy(pair->value, value);
     return pair;
 }
@@ -314,14 +315,6 @@ map_t get_pangolin2parent(const char *filename) {
     return pangolin2parent;
 }
 
-//void add_root(map_t pangolin2parent, char *variant) {
-//    uint idx = 0;
-//    void *item = NULL;
-//    map_iterate(pangolin2parent, &idx, &item);
-//    pair_t *pair = (pair_t *)item;
-//    pair->value
-//}
-
 pair_t *get_root(pair_t *pair, map_t pangolin2parent) {
     pair_t *pair_copy = pair_create(pair->key, pair->value);
     pair_t *result = NULL;
@@ -338,6 +331,20 @@ pair_t *get_root(pair_t *pair, map_t pangolin2parent) {
     return result;
 }
 
+void add_root(map_t pangolin2parent, char *variant) {
+    uint idx = 0;
+    void *item = NULL;
+    map_iterate(pangolin2parent, &idx, &item);
+
+    pair_t *tmp = item;
+
+    pair_t *root = get_root(tmp, pangolin2parent);
+    strcpy(root->value, variant);
+
+    pair_t *new_root = pair_create(variant, variant);
+    map_insert(&pangolin2parent, new_root);
+}
+
 char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     pair_t *pair;
     pair_t const *result;   // type declarations are read right-to-left -> pointer to constant pair_t
@@ -347,7 +354,6 @@ char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     strcpy(pair->value, result->value);
 
     result = get_root(pair, pangolin2parent);
-    // get_root(pair, pangolin2parent);
     if (result == NULL) return NULL;
 
     char *res = malloc(strlen(result->key) + 1);

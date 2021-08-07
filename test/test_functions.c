@@ -220,6 +220,27 @@ Test(core, get_root_returns_correct_root) {
     map_destroy(&pangolin2parent);
 }
 
+Test(core, add_root_works) {
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    add_root(pangolin2parent, "other");
+    pair_t *pair, *root;
+
+    uint idx = 0;
+    void *item = NULL;
+
+    map_iterate(pangolin2parent, &idx, &item);
+    idx++;
+    while (item != NULL) {
+        pair = (pair_t *)item;
+        root = get_root(pair, pangolin2parent);
+        cr_assert(strcmp(root->key, root->value) == 0);
+        cr_assert(strcmp(root->key, "other") == 0);
+
+        map_iterate(pangolin2parent, &idx, &item);
+        idx++;
+    }
+}
+
 Test(core, get_variants_returns_correct_variants) {
     record_t *record;
     map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
