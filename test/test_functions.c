@@ -239,6 +239,8 @@ Test(core, add_root_works) {
         map_iterate(pangolin2parent, &idx, &item);
         idx++;
     }
+    free_map_content(&pangolin2parent);
+    map_destroy(&pangolin2parent);
 }
 
 Test(core, get_variants_returns_correct_variants) {
@@ -311,4 +313,41 @@ Test(core, add_counts_works_random_check) {
     cr_assert(table[1][1][5] == 1);
     // array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet);
     array_3d_free(table, ref_size, num_variants, alphabet_size);
+}
+
+Test(core, test_isolate_subclades_random_check) {
+    uint num_variants = 0;
+    char **variants = NULL;
+    load_variants("../data/variants.txt", &variants, &num_variants);
+    add_variant(&variants, &num_variants, "other");
+
+    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
+    add_root(pangolin2parent, "other");
+    isolate_subclades(pangolin2parent, variants, num_variants);
+
+    pair_t *pair, *root;
+    pair = pair_create("B.1.258.20", "B.1.258.20");
+    root = get_root(pair, pangolin2parent);
+    cr_assert(strcmp(root->key, "B.1.258") == 0);
+
+    strcpy(pair->value, "AY.2");
+    root = get_root(pair, pangolin2parent);
+    cr_assert(strcmp(root->key, "other") == 0);
+
+    strcpy(pair->value, "Y.1");
+    root = get_root(pair, pangolin2parent);
+    cr_assert(strcmp(root->key, "B.1.177") == 0);
+
+    strcpy(pair->value, "L.1");
+    root = get_root(pair, pangolin2parent);
+    cr_assert(strcmp(root->key, "other") == 0);
+
+    strcpy(pair->value, "B.1.160");
+    root = get_root(pair, pangolin2parent);
+    cr_assert(strcmp(root->key, "B.1.160") == 0);
+
+    pair_free(pair);
+    free_map_content(&pangolin2parent);
+    map_destroy(&pangolin2parent);
+    dealloc_variants(&variants, &num_variants);
 }

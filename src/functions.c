@@ -339,10 +339,25 @@ void add_root(map_t pangolin2parent, char *variant) {
     pair_t *tmp = item;
 
     pair_t *root = get_root(tmp, pangolin2parent);
+    // TODO: what if root will be NULL?
     strcpy(root->value, variant);
 
     pair_t *new_root = pair_create(variant, variant);
     map_insert(&pangolin2parent, new_root);
+}
+
+void isolate_subclades(map_t pangolin2parent, char **variants, uint num_variants) {
+    pair_t *tmp;
+    for (uint i=0; i<num_variants; i++) {
+        pair_t *pair = pair_create(variants[i], variants[i]);
+
+        tmp = map_search(pangolin2parent, pair);
+        if (tmp != NULL) {
+            map_delete(pangolin2parent, tmp);
+            pair_free(tmp);
+        }
+        map_insert(&pangolin2parent, pair);
+    }
 }
 
 char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {

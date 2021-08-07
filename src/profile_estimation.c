@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     map_t id2pangolin = get_id2pangolin(metadata);
     map_t pangolin2parent = get_pangolin2parent(lineages);
     add_root(pangolin2parent, "other");
-    // isolate_subclades(pangolin2parent, variants);
+    isolate_subclades(pangolin2parent, variants, num_variants);
 
     samFile *bam_stream = sam_open(bamfile, "r");
     sam_hdr_t *bam_header = sam_hdr_read(bam_stream);
