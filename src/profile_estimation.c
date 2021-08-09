@@ -48,5 +48,10 @@ int main(int argc, char** argv) {
     array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, out);
     fclose(out);
 
-    free(table);
+    array_3d_free(table, ref_size, num_variants, alphabet_size);
+    free_map_content(&id2pangolin);
+    map_destroy(&id2pangolin);
+    free_map_content(&pangolin2parent);
+    map_destroy(&pangolin2parent);
+    dealloc_variants(&variants, &num_variants);
 }

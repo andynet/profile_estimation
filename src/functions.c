@@ -369,7 +369,10 @@ char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     strcpy(pair->value, result->value);
 
     result = get_root(pair, pangolin2parent);
-    if (result == NULL) return NULL;
+    if (result == NULL) {
+        pair_free(pair);
+        return NULL;
+    }
 
     char *res = malloc(strlen(result->key) + 1);
     strcpy(res, result->key);
