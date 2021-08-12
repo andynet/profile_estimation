@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(profile_estimation)
-# set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_FLAGS "-Wall -Wextra -pedantic -march=native -O3")
 
-# message("CMAKE_CXX20_STANDARD_COMPILE_OPTION is " ${CMAKE_CXX20_STANDARD_COMPILE_OPTION} )
-# message("standard is  " ${CMAKE_C_STANDARD})
 link_directories(/usr/local/lib)
 add_library(hashing hashing/src/hashing.h hashing/src/hashing.c)
 add_library(safe_alloc hashing/src/safe_alloc.h hashing/src/safe_alloc.c)

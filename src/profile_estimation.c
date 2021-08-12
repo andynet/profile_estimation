@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
 
     int ret;
+    uint i = 0;
     bam1_t *aln = bam_init1();
     ret = sam_read1(bam_stream, bam_header, aln);
     while (ret > 0) {
@@ -46,6 +47,8 @@ int main(int argc, char** argv) {
         if (record->variant != NULL)
             add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
         record_destroy(record);
+        i++;
+        if (i % 1000 == 0) printf("Processed %d records.\n", i);
     }
 
     bam_destroy1(aln);
