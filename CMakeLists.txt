@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(profile_estimation)
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "-Wall -Wextra -pedantic -march=native -O3")
+set(CMAKE_C_FLAGS "-Wall -Wextra -pedantic -march=native")
 
 link_directories(/usr/local/lib)
 add_library(hashing hashing/src/hashing.h hashing/src/hashing.c)

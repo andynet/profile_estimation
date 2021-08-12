@@ -1,44 +1,38 @@
 #include "../src/functions.c"
 
 int main() {
-    uint num_variants = 0;
-    char **variants = NULL;
-    load_variants("../data/variants.txt", &variants, &num_variants);
-    add_variant(&variants, &num_variants, "other");
+    uint num_variants = 2;
+    char *variants[] = {"A", "B"};
 
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
-    add_root(pangolin2parent, "other");
-    isolate_subclades(pangolin2parent, variants, num_variants);
+    uint alphabet_size = 6;
+    char alphabet[] = {'A', 'C', 'G', 'T', 'N', '-'};
 
-    pair_t *pair, *root;
-    pair = pair_create("B.1.258.20", "B.1.258.20");
-    root = get_root(pair, pangolin2parent);
-    pair_print(root);
-    // cr_assert(strcmp(root->key, "B.1.258") == 0);
+    uint ref_size = 4;
 
-    strcpy(pair->value, "AY.2");
-    root = get_root(pair, pangolin2parent);
-    pair_print(root);
-    // cr_assert(strcmp(root->key, "other") == 0);
+    uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
+    record_t *record;
 
-    strcpy(pair->value, "Y.1");
-    root = get_root(pair, pangolin2parent);
-    pair_print(root);
-    // cr_assert(strcmp(root->key, "B.1.177") == 0);
+    record = record_full_create("seq1", "AAAA", "A");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
 
-    strcpy(pair->value, "L.1");
-    root = get_root(pair, pangolin2parent);
-    pair_print(root);
-    // cr_assert(strcmp(root->key, "other") == 0);
+    record = record_full_create("seq3", "CAAC", "A");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
 
-    strcpy(pair->value, "B.1.160");
-    root = get_root(pair, pangolin2parent);
-    pair_print(root);
-    // cr_assert(strcmp(root->key, "B.1.160") == 0);
+    record = record_full_create("seq2", "CGTA", "B");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
 
-    pair_free(pair);
-    free_map_content(&pangolin2parent);
-    map_destroy(&pangolin2parent);
-    dealloc_variants(&variants, &num_variants);
+    record = record_full_create("seq4", ".-NU", "B");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    record = record_full_create("seq5", "ACGT", "C");
+    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    record_destroy(record);
+
+    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
+    array_3d_free(table, ref_size, num_variants, alphabet_size);
 }
 

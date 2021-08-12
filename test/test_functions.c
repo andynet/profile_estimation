@@ -4,7 +4,7 @@
 Test(core, empty_test) {}
 
 Test(core, get_num_lines_returns_correct_value) {
-    uint n_lines = get_n_lines("../data/variants.txt");
+    uint n_lines = get_n_lines("../data/test1/variants.txt");
     cr_assert(n_lines == 5);
 }
 
@@ -14,7 +14,7 @@ Test(core, load_variant_loads) {
     char **variants = NULL;
     uint number = 0;
 
-    load_variants("../data/variants.txt", &variants, &number);
+    load_variants("../data/test1/variants.txt", &variants, &number);
     cr_assert(strcmp(variants[0], "B.1.1.7") == 0);
     cr_assert(strcmp(variants[1], "B.1.160") == 0);
     cr_assert(strcmp(variants[2], "B.1.177") == 0);
@@ -25,7 +25,7 @@ Test(core, add_variant_adds_variants_and_increases_counter) {
     char **variants = NULL;
     uint number = 0;
 
-    load_variants("../data/variants.txt", &variants, &number);
+    load_variants("../data/test1/variants.txt", &variants, &number);
     add_variant(&variants, &number, "other");
 
     cr_assert(strcmp(variants[4], "other") == 0);
@@ -81,7 +81,7 @@ Test(core, comparison_of_items_works) {
 }
 
 Test(core, get_id2pangolin_random_check) {
-    map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
+    map_t id2pangolin = get_id2pangolin("../data/test1/subset.meta.tsv");
     pair_t result;
 
     pair_t item1 = { .key = "hCoV-19/Germany/BY-MVP-0069/2020", .value = "B.1.1" };
@@ -94,7 +94,7 @@ Test(core, get_id2pangolin_random_check) {
 }
 
 Test(core, get_pangolin2parent_random_check) {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages.yml");
     pair_t result;
 
     pair_t pair1 = { .key = "AA.1", .value = "B.1.177.15" };
@@ -107,7 +107,7 @@ Test(core, get_pangolin2parent_random_check) {
 }
 
 Test(core, get_pangolin2parent_small_check) {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages_small.yml");
     pair_t result;
 
     pair_t pair1 = { .key = "A.2.5.1", .value = "A.2"};
@@ -124,7 +124,7 @@ Test(core, get_pangolin2parent_small_check) {
 }
 
 Test(core, get_pangolin2parent_does_not_leak) {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages_small.yml");
     free_map_content(&pangolin2parent);
     map_destroy(&pangolin2parent);
 }
@@ -142,7 +142,7 @@ Test(core, pair_are_created_correctly) {
 }
 
 Test(core, is_reading_whole_bam) {
-    samFile *bam_stream = sam_open("../data/subset.bam", "r");
+    samFile *bam_stream = sam_open("../data/test1/subset.bam", "r");
 
     bam_hdr_t *bam_header = sam_hdr_read(bam_stream);
     bam1_t *aln = bam_init1();
@@ -163,7 +163,7 @@ Test(core, is_reading_whole_bam) {
 }
 
 Test(core, record_read_reads_correct_sequences_random_check) {
-    samFile *bam_stream = sam_open("../data/subset.bam", "r");
+    samFile *bam_stream = sam_open("../data/test1/subset.bam", "r");
 
     bam_hdr_t *bam_header = sam_hdr_read(bam_stream);
     bam1_t *aln = bam_init1();
@@ -193,7 +193,7 @@ Test(core, record_read_reads_correct_sequences_random_check) {
 }
 
 Test(core, get_root_returns_correct_root) {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages_small.yml");
     pair_t *pair, *root;
 
     uint idx = 0;
@@ -221,7 +221,7 @@ Test(core, get_root_returns_correct_root) {
 }
 
 Test(core, add_root_works) {
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages_small.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages_small.yml");
     add_root(pangolin2parent, "other");
     pair_t *pair, *root;
 
@@ -245,8 +245,8 @@ Test(core, add_root_works) {
 
 Test(core, get_variants_returns_correct_variants) {
     record_t *record;
-    map_t id2pangolin = get_id2pangolin("../data/subset.meta.tsv");
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
+    map_t id2pangolin = get_id2pangolin("../data/test1/subset.meta.tsv");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages.yml");
 
     record = record_create("hCoV-19/England/CAMB-755E9/2020", 3);
     record->variant = get_variant(record, id2pangolin, pangolin2parent);
@@ -318,10 +318,10 @@ Test(core, add_counts_works_random_check) {
 Test(core, test_isolate_subclades_random_check) {
     uint num_variants = 0;
     char **variants = NULL;
-    load_variants("../data/variants.txt", &variants, &num_variants);
+    load_variants("../data/test1/variants.txt", &variants, &num_variants);
     add_variant(&variants, &num_variants, "other");
 
-    map_t pangolin2parent = get_pangolin2parent("../data/lineages.yml");
+    map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages.yml");
     add_root(pangolin2parent, "other");
     isolate_subclades(pangolin2parent, variants, num_variants);
 
