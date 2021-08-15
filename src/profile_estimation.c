@@ -7,16 +7,17 @@ enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT};
 char **parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    int test_argc = 11;
-    char *test_argv[] = {
-        "profile_estimation",
-        "-b", "../data/subset.bam",
-        "-m", "../data/subset.meta.tsv",
-        "-v", "../data/variants.txt",
-        "-l", "../data/lineages.yml",
-        "-o", "../data/output.tsv"
-    };
-    char **args = parse_args(test_argc, test_argv);
+//    int test_argc = 11;
+//    char *test_argv[] = {
+//        "profile_estimation",
+//        "-b", "../data/subset.bam",
+//        "-m", "../data/subset.meta.tsv",
+//        "-v", "../data/variants.txt",
+//        "-l", "../data/lineages.yml",
+//        "-o", "../data/output.tsv"
+//    };
+//    char **args = parse_args(test_argc, test_argv);
+    char **args = parse_args(argc, argv);
 
     uint num_variants = 0;
     char **variants = NULL;
@@ -38,6 +39,7 @@ int main(int argc, char** argv) {
     uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
 
     int ret;
+    uint i = 0;
     bam1_t *aln = bam_init1();
     ret = sam_read1(bam_stream, bam_header, aln);
     while (ret > 0) {
@@ -46,6 +48,8 @@ int main(int argc, char** argv) {
         if (record->variant != NULL)
             add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
         record_destroy(record);
+        i++;
+        if (i % 1000 == 0) printf("Processed %d records.\n", i);
     }
 
     bam_destroy1(aln);

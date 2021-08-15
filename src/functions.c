@@ -91,7 +91,11 @@ void strip(char *str) {
 
 void load_variants(const char *filename, char ***variants_ptr, uint *number_ptr) {
     FILE *stream = fopen(filename, "r");
-    (*variants_ptr) = (char **) malloc(sizeof (**variants_ptr) * 8);    // TODO: WTF
+    if (stream == NULL) {
+        printf("Unable to open file %s.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    (*variants_ptr) = (char **) malloc(sizeof (**variants_ptr) * get_n_lines(filename));
 
     char *line = NULL;
     size_t len = 0;
@@ -508,12 +512,15 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
 }
 
 void add_counts(uint ***table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
+    uint j = 0;
+    while (j < num_variants && strcmp(record->variant, variants[j]) != 0)
+        j++;
+    if (j == num_variants) return;
+
     for (uint i=0; i<ref_size; i++) {
-        for (uint j=0; j<num_variants; j++) {
-            for (uint k=0; k<alphabet_size; k++) {
-                if (strcmp(record->variant, variants[j]) == 0 && alphabet[k] == record->seq[i]) {
-                    table[i][j][k]++;
-                }
+        for (uint k=0; k<alphabet_size; k++) {
+            if (alphabet[k] == record->seq[i]) {
+                table[i][j][k]++;
             }
         }
     }
