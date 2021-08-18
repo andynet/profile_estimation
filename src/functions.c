@@ -5,7 +5,6 @@
 #include <htslib/sam.h>
 #include "../hashing/src/hashing.h"
 #include "../src/ndarray.h"
-// #include "../src/ndarray.c"
 
 typedef struct {
     char *key;
@@ -101,13 +100,13 @@ void load_variants(const char *filename, char ***variants_ptr, uint *number_ptr)
 
     char *line = NULL;
     size_t len = 0;
-    ssize_t nread;
-    while ((nread = getline(&line, &len, stream)) != -1) {
+    while (getline(&line, &len, stream) != -1) {
         (*variants_ptr)[*number_ptr] = (char *) malloc(len);
         strip(line);
         strcpy((*variants_ptr)[*number_ptr], line);
         (*number_ptr)++;
     }
+    // handle errno?
     free(line);
     line = NULL;
 
@@ -150,7 +149,6 @@ char *read_tsv_rec(const char *line, uint pos) {
     original = strdup(line);
     rest = original;
 
-    // for (uint i = 0; (token = strtok_r(rest, "\t", &rest)); i++) {
     for (uint i = 0; (token = tokenize(rest, "\t", &rest)); i++) {
         if (i == pos) {
             strip(token);
@@ -174,7 +172,7 @@ uint hash(const void *item1) {
     char *key = i1->key;
     ulong h = 0;
     int c;
-    while ((c = *(key++)))
+    while ((c = (int)*(key++)))
         h = c + (h << 6) + (h << 16) - h;   // http://www.cse.yorku.ca/~oz/hash.html
     return h;
 }
@@ -340,12 +338,12 @@ pair_t *get_root(pair_t *pair, map_t pangolin2parent) {
 void add_root(map_t pangolin2parent, char *variant) {
     uint idx = 0;
     void *item = NULL;
-    map_iterate(pangolin2parent, &idx, &item);
-
-    pair_t *tmp = item;
-
-    pair_t *root = get_root(tmp, pangolin2parent);
-    // TODO: what if root will be NULL?
+    pair_t *root = NULL, *tmp;
+    while (root == NULL) {
+        map_iterate(pangolin2parent, &idx, &item);
+        tmp = item;
+        root = get_root(tmp, pangolin2parent);
+    }
     strcpy(root->value, variant);
 
     pair_t *new_root = pair_create(variant, variant);
@@ -397,44 +395,19 @@ void free_map_content(map_t *map) {
     }
 }
 
-//uint ***init_3d_array(uint x, uint y, uint z) {
-//    uint ***res;
-//    res = malloc(sizeof (**res) * x);
-//    for (uint i=0; i<x; i++) {
-//        res[i] = malloc(sizeof (*res) * y);
-//        for (uint j=0; j<y; j++) {
-//            res[i][j] = malloc(sizeof (res) * z);
-//            for (uint k=0; k<z; k++) {
-//                res[i][j][k] = 0;
-//            }
-//        }
-//    }
-//    return res;
-//}
-
-void array_3d_print(ndarray_t *array_3d, uint x, uint y, uint z, char **variants, char *alphabet, FILE *out) {
+void array_3d_print(ndarray_t *array_3d, char **variants, char *alphabet, FILE *out) {
     // variant, pos, letter, count
-    // TODO: get x, y, z from ndarray_t structure
+    uint *dim_sizes = ndarray_dim_sizes_get(array_3d);
     uint *c;
-    for (uint j=0; j<y; j++) {
-        for (uint i=0; i<x; i++) {
-            for (uint k=0; k<z; k++) {
+    for (uint j=0; j < dim_sizes[1]; j++) {
+        for (uint i=0; i < dim_sizes[0]; i++) {
+            for (uint k=0; k < dim_sizes[2]; k++) {
                 c = ndarray_at(array_3d, i, j, k);
                 fprintf(out, "%s\t%d\t%c\t%d\n", variants[j], i, alphabet[k], *c);
             }
         }
     }
 }
-
-//void array_3d_free(uint ***array_3d, uint x, uint y, uint z) {
-//    for (uint i=0; i<x; i++) {
-//        for (uint j=0; j<y; j++) {
-//            free(array_3d[i][j]);
-//        }
-//        free(array_3d[i]);
-//    }
-//    free(array_3d);
-//}
 
 uint get_ref_size(sam_hdr_t *bam_header) {
     if (sam_hdr_nref(bam_header) != 1) {
@@ -515,15 +488,17 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
     return result;
 }
 
-void add_counts(ndarray_t *table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
+void add_counts(ndarray_t *table, record_t *record, char **variants, const char *alphabet) {
+    // ndarray_create(3, ref_size, num_variants, alphabet_size);
+    uint *dim_sizes = ndarray_dim_sizes_get(table);
     uint j = 0;
-    while (j < num_variants && strcmp(record->variant, variants[j]) != 0)
+    while (j < dim_sizes[1] && strcmp(record->variant, variants[j]) != 0)
         j++;
-    if (j == num_variants) return;
+    if (j == dim_sizes[1]) return;
 
     uint *c;
-    for (uint i=0; i<ref_size; i++) {
-        for (uint k=0; k<alphabet_size; k++) {
+    for (uint i=0; i < dim_sizes[0]; i++) {
+        for (uint k=0; k < dim_sizes[2]; k++) {
             if (alphabet[k] == record->seq[i]) {
                 c = ndarray_at(table, i, j, k);
                 (*c)++;

@@ -9,8 +9,6 @@ Test(core, get_num_lines_returns_correct_value) {
 }
 
 Test(core, load_variant_loads) {
-    // Why can't I use const in the test?
-    // const char *variants_file = "../data/test/variants.txt";
     char **variants = NULL;
     uint number = 0;
 
@@ -288,23 +286,23 @@ Test(core, add_counts_works_random_check) {
     record_t *record;
 
     record = record_full_create("seq1", "AAAA", "A");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
 
     record = record_full_create("seq3", "CAAC", "A");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
 
     record = record_full_create("seq2", "CGTA", "B");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
 
     record = record_full_create("seq4", ".-NU", "B");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
 
     record = record_full_create("seq5", "ACGT", "C");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
 
     cr_assert(*ndarray_at(table, 0, 0, 0) == 1);

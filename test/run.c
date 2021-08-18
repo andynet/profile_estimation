@@ -14,36 +14,31 @@ int main() {
     record_t *record;
 
     record = record_full_create("seq1", "AAAA", "A");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
 
     record = record_full_create("seq3", "CAAC", "A");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
 
     record = record_full_create("seq2", "CGTA", "B");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
 
     record = record_full_create("seq4", ".-NU", "B");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
 
     record = record_full_create("seq5", "ACGT", "C");
-    add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+    add_counts(table, record, variants, alphabet);
     record_destroy(record);
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
 
 //    cr_assert(*ndarray_at(table, 0, 0, 0) == 1);
 //    cr_assert(*ndarray_at(table, 1, 0, 0) == 2);
 //    cr_assert(*ndarray_at(table, 0, 1, 1) == 1);
 //    cr_assert(*ndarray_at(table, 1, 1, 5) == 1);
 
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
+    array_3d_print(table, variants, alphabet, stdout);
     ndarray_destroy(&table);
 }
 

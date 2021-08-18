@@ -49,3 +49,11 @@ uint *ndarray_at(ndarray_t *array, ...) {
 
     return &array->content[position];
 }
+
+uint ndarray_ndims_get(ndarray_t *array) {
+    return array->ndims;
+}
+
+uint *ndarray_dim_sizes_get(ndarray_t *array) {
+    return array->dim_sizes;
+}

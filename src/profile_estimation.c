@@ -1,6 +1,5 @@
 #include <htslib/sam.h>
 #include <unistd.h>
-#include "../hashing/src/hashing.h"
 #include "functions.c"
 
 enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT};
@@ -37,7 +36,6 @@ int main(int argc, char** argv) {
     char alphabet[] = {'A', 'C', 'G', 'T', 'N', '-'};
 
     ndarray_t *table = ndarray_create(3, ref_size, num_variants, alphabet_size);
-    // uint ***table = init_3d_array();
 
     int ret;
     uint i = 0;
@@ -47,7 +45,7 @@ int main(int argc, char** argv) {
         record_t *record = record_read(bam_stream, bam_header, aln, &ret);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
         if (record->variant != NULL)
-            add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
+            add_counts(table, record, variants, alphabet);
         record_destroy(record);
         i++;
         if (i % 1000 == 0) printf("Processed %d records.\n", i);
@@ -58,11 +56,10 @@ int main(int argc, char** argv) {
     sam_close(bam_stream);
 
     FILE *out = fopen(args[OUTPUT], "w");
-    array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, out);
+    array_3d_print(table, variants, alphabet, out);
     fclose(out);
 
     ndarray_destroy(&table);
-    // array_3d_free(table, ref_size, num_variants, alphabet_size);
     free_map_content(&id2pangolin);
     map_destroy(&id2pangolin);
     free_map_content(&pangolin2parent);
