@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include "../src/ndarray.h"
 #include "../src/ndarray.c"
 
 Test(core, empty_test) {}

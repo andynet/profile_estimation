@@ -284,7 +284,7 @@ Test(core, add_counts_works_random_check) {
 
     uint ref_size = 4;
 
-    uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
+    ndarray_t *table = ndarray_create(3, ref_size, num_variants, alphabet_size);
     record_t *record;
 
     record = record_full_create("seq1", "AAAA", "A");
@@ -307,12 +307,13 @@ Test(core, add_counts_works_random_check) {
     add_counts(table, record, variants, alphabet, num_variants, alphabet_size, ref_size);
     record_destroy(record);
 
-    cr_assert(table[0][0][0] == 1);
-    cr_assert(table[1][0][0] == 2);
-    cr_assert(table[0][1][1] == 1);
-    cr_assert(table[1][1][5] == 1);
-    // array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet);
-    array_3d_free(table, ref_size, num_variants, alphabet_size);
+    cr_assert(*ndarray_at(table, 0, 0, 0) == 1);
+    cr_assert(*ndarray_at(table, 1, 0, 0) == 2);
+    cr_assert(*ndarray_at(table, 0, 1, 1) == 1);
+    cr_assert(*ndarray_at(table, 1, 1, 5) == 1);
+
+    // array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, stdout);
+    ndarray_destroy(&table);
 }
 
 Test(core, test_isolate_subclades_random_check) {

@@ -4,6 +4,8 @@
 #include <yaml.h>
 #include <htslib/sam.h>
 #include "../hashing/src/hashing.h"
+#include "../src/ndarray.h"
+// #include "../src/ndarray.c"
 
 typedef struct {
     char *key;
@@ -395,42 +397,44 @@ void free_map_content(map_t *map) {
     }
 }
 
-uint ***init_3d_array(uint x, uint y, uint z) {
-    uint ***res;
-    res = malloc(sizeof (**res) * x);
-    for (uint i=0; i<x; i++) {
-        res[i] = malloc(sizeof (*res) * y);
-        for (uint j=0; j<y; j++) {
-            res[i][j] = malloc(sizeof (res) * z);
-            for (uint k=0; k<z; k++) {
-                res[i][j][k] = 0;
-            }
-        }
-    }
-    return res;
-}
+//uint ***init_3d_array(uint x, uint y, uint z) {
+//    uint ***res;
+//    res = malloc(sizeof (**res) * x);
+//    for (uint i=0; i<x; i++) {
+//        res[i] = malloc(sizeof (*res) * y);
+//        for (uint j=0; j<y; j++) {
+//            res[i][j] = malloc(sizeof (res) * z);
+//            for (uint k=0; k<z; k++) {
+//                res[i][j][k] = 0;
+//            }
+//        }
+//    }
+//    return res;
+//}
 
-void array_3d_print(uint ***array_3d, uint x, uint y, uint z, char **variants, char *alphabet, FILE *out) {
+void array_3d_print(ndarray_t *array_3d, uint x, uint y, uint z, char **variants, char *alphabet, FILE *out) {
     // variant, pos, letter, count
+    // TODO: get x, y, z from ndarray_t structure
+    uint *c;
     for (uint j=0; j<y; j++) {
         for (uint i=0; i<x; i++) {
             for (uint k=0; k<z; k++) {
-                fprintf(out, "%s\t%d\t%c\t%d\n", variants[j], i, alphabet[k], array_3d[i][j][k]);
-                // printf("array_3d[%d][%d][%d] = %d\n", i, j, k, array_3d[i][j][k]);
+                c = ndarray_at(array_3d, i, j, k);
+                fprintf(out, "%s\t%d\t%c\t%d\n", variants[j], i, alphabet[k], *c);
             }
         }
     }
 }
 
-void array_3d_free(uint ***array_3d, uint x, uint y, uint z) {
-    for (uint i=0; i<x; i++) {
-        for (uint j=0; j<y; j++) {
-            free(array_3d[i][j]);
-        }
-        free(array_3d[i]);
-    }
-    free(array_3d);
-}
+//void array_3d_free(uint ***array_3d, uint x, uint y, uint z) {
+//    for (uint i=0; i<x; i++) {
+//        for (uint j=0; j<y; j++) {
+//            free(array_3d[i][j]);
+//        }
+//        free(array_3d[i]);
+//    }
+//    free(array_3d);
+//}
 
 uint get_ref_size(sam_hdr_t *bam_header) {
     if (sam_hdr_nref(bam_header) != 1) {
@@ -499,7 +503,7 @@ void record_add_aln(record_t *record, bam1_t *aln) {
 }
 
 record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_record, int *ret) {
-    char *qname, *cigar, *seq;
+    char *qname;
     qname = bam_get_qname(bam_record);
     uint ref_size = get_ref_size(bam_header);
     record_t *result = record_create(qname, ref_size);
@@ -511,16 +515,18 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
     return result;
 }
 
-void add_counts(uint ***table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
+void add_counts(ndarray_t *table, record_t *record, char **variants, const char *alphabet, uint num_variants, uint alphabet_size, uint ref_size) {
     uint j = 0;
     while (j < num_variants && strcmp(record->variant, variants[j]) != 0)
         j++;
     if (j == num_variants) return;
 
+    uint *c;
     for (uint i=0; i<ref_size; i++) {
         for (uint k=0; k<alphabet_size; k++) {
             if (alphabet[k] == record->seq[i]) {
-                table[i][j][k]++;
+                c = ndarray_at(table, i, j, k);
+                (*c)++;
             }
         }
     }

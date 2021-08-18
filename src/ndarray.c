@@ -1,19 +1,13 @@
 #include <stdarg.h>     /* for variadic functions */
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "../src/ndarray.h"
 
 struct ndarray {
     uint ndims;
     uint *dim_sizes;
     uint *content;
 };
-typedef struct ndarray ndarray_t;
-
-// struct ndarray;
-// typedef struct ndarray ndarray_t;
-
-ndarray_t *ndarray_create(uint ndims, ...);
-void       ndarray_destroy(ndarray_t **ndarray);
-// void       ndarray_print(FILE *fp, ndarray_t *ndarray);
 
 ndarray_t *ndarray_create(uint ndims, ...) {
     ndarray_t *array = malloc(sizeof *array);
@@ -51,9 +45,6 @@ uint *ndarray_at(ndarray_t *array, ...) {
         for (uint j = i+1; j < array->ndims; j++) part_pos *= array->dim_sizes[j];
         position += va_arg(args, uint) * part_pos;
     }
-    // position += va_arg(args, uint) * array->dim_sizes[1] * array->dim_sizes[2];
-    // position += va_arg(args, uint) * array->dim_sizes[2];
-    // position += va_arg(args, uint);
     va_end(args);
 
     return &array->content[position];

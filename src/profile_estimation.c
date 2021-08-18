@@ -10,11 +10,11 @@ int main(int argc, char** argv) {
 //    int test_argc = 11;
 //    char *test_argv[] = {
 //        "profile_estimation",
-//        "-b", "../data/subset.bam",
-//        "-m", "../data/subset.meta.tsv",
-//        "-v", "../data/variants.txt",
-//        "-l", "../data/lineages.yml",
-//        "-o", "../data/output.tsv"
+//        "-b", "../data/test1/subset.bam",
+//        "-m", "../data/test1/subset.meta.tsv",
+//        "-v", "../data/test1/variants.txt",
+//        "-l", "../data/test1/lineages.yml",
+//        "-o", "../data/test1/output.tsv"
 //    };
 //    char **args = parse_args(test_argc, test_argv);
     char **args = parse_args(argc, argv);
@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
     uint alphabet_size = 6;
     char alphabet[] = {'A', 'C', 'G', 'T', 'N', '-'};
 
-    uint ***table = init_3d_array(ref_size, num_variants, alphabet_size);
+    ndarray_t *table = ndarray_create(3, ref_size, num_variants, alphabet_size);
+    // uint ***table = init_3d_array();
 
     int ret;
     uint i = 0;
@@ -60,7 +61,8 @@ int main(int argc, char** argv) {
     array_3d_print(table, ref_size, num_variants, alphabet_size, variants, alphabet, out);
     fclose(out);
 
-    array_3d_free(table, ref_size, num_variants, alphabet_size);
+    ndarray_destroy(&table);
+    // array_3d_free(table, ref_size, num_variants, alphabet_size);
     free_map_content(&id2pangolin);
     map_destroy(&id2pangolin);
     free_map_content(&pangolin2parent);
