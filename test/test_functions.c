@@ -79,7 +79,7 @@ Test(core, comparison_of_items_works) {
 }
 
 Test(core, get_id2pangolin_random_check) {
-    map_t id2pangolin = get_id2pangolin("../data/test1/subset.meta.tsv");
+    map_t id2pangolin = get_tsv_pair_map("../data/test1/subset.meta.tsv", 0, 11);
     pair_t result;
 
     pair_t item1 = { .key = "hCoV-19/Germany/BY-MVP-0069/2020", .value = "B.1.1" };
@@ -243,7 +243,7 @@ Test(core, add_root_works) {
 
 Test(core, get_variants_returns_correct_variants) {
     record_t *record;
-    map_t id2pangolin = get_id2pangolin("../data/test1/subset.meta.tsv");
+    map_t id2pangolin = get_tsv_pair_map("../data/test1/subset.meta.tsv", 0, 11);
     map_t pangolin2parent = get_pangolin2parent("../data/test1/lineages.yml");
 
     record = record_create("hCoV-19/England/CAMB-755E9/2020", 3);
@@ -349,4 +349,17 @@ Test(core, test_isolate_subclades_random_check) {
     free_map_content(&pangolin2parent);
     map_destroy(&pangolin2parent);
     dealloc_variants(&variants, &num_variants);
+}
+
+Test(core, difference_in_days_is_nonnegative) {
+    uint daydiff;
+    map_t id2date = get_tsv_pair_map("../data/test1/subset.meta.tsv", 0, 3);
+    daydiff = get_daydiff("hCoV-19/England/CAMB-755E9/2020", id2date, "2020-03-17");
+    cr_assert(daydiff == 1);
+    daydiff = get_daydiff("hCoV-19/England/CAMB-755E9/2020", id2date, "2020-03-15");
+    cr_assert(daydiff == 1);
+    daydiff = get_daydiff("hCoV-19/England/CAMB-755E9/2020", id2date, "2020-01-01");
+    cr_assert(daydiff == 75);
+    daydiff = get_daydiff("hCoV-19/England/OXON-AD4FA/2020", id2date, "2020-01-01");
+    cr_assert(daydiff == UINT_MAX);
 }

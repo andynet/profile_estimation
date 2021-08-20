@@ -3,8 +3,13 @@
 #include <string.h>
 #include <yaml.h>
 #include <htslib/sam.h>
+#include <time.h>
+// #include <tgmath.h>
+#include <math.h>
 #include "../hashing/src/hashing.h"
 #include "../src/ndarray.h"
+
+typedef struct tm timestamp_t;
 
 typedef struct {
     char *key;
@@ -184,23 +189,22 @@ int cmp(const void *item1, const void *item2) {
     return strcmp(i1->key, i2->key);
 }
 
-map_t get_id2pangolin(const char *filename) {
-    map_t id2pangolin = map_create(1024, hash, cmp);
+map_t get_tsv_pair_map(char const *filename, uint col1, uint col2) {
+    map_t result = map_create(1024, &hash, &cmp);
 
     FILE *stream = fopen(filename, "r");
     char *line = NULL;
     size_t len = 0;
-    ssize_t nread;
 
-    while ((nread = getline(&line, &len, stream)) != -1) {
+    while (getline(&line, &len, stream) != -1) {
         pair_t *item1 = malloc(sizeof (pair_t));
-        item1->key = read_tsv_rec(line, 0);
-        item1->value = read_tsv_rec(line, 11);
-        map_insert(&id2pangolin, item1);
+        item1->key = read_tsv_rec(line, col1);
+        item1->value = read_tsv_rec(line, col2);
+        map_insert(&result, item1);
     }
     free(line);
     fclose(stream);
-    return id2pangolin;
+    return result;
 }
 
 void yaml_parser_parse_checked(yaml_parser_t *parser, yaml_event_t *event) {
@@ -382,6 +386,38 @@ char *get_variant(record_t *record, map_t id2pangolin, map_t pangolin2parent) {
     strcpy(res, result->key);
     pair_free(pair);
     return res;
+}
+
+timestamp_t *strtotimestamp(char const *str) {
+    timestamp_t *t = malloc(sizeof (*t));
+    memset(t, 0, sizeof (*t));
+
+    uint year, month, day;
+    sscanf(str, "%u-%u-%u", &year, &month, &day);
+    t->tm_year = year - 1900;   /* The number of years since 1900   */
+    t->tm_mon = month - 1;      /* month, range 0 to 11             */
+    t->tm_mday = day;           /* day of the month, range 1 to 31  */
+    return t;
+}
+
+uint get_daydiff(char *id, map_t id2date, char *base_date) {
+    pair_t *pair = pair_create(id, "................");
+    char *new_date = ((pair_t *)map_search(id2date, pair))->value;
+    if (strlen(new_date) != 10) { return UINT_MAX; }
+
+    timestamp_t *t1 = strtotimestamp(base_date);
+    timestamp_t *t2 = strtotimestamp(new_date);
+
+    #define DAY_TO_SEC  86400
+    uint days = abs((int)difftime(mktime(t1), mktime(t2))) / DAY_TO_SEC;
+    return days;
+}
+
+double get_gaussian_weight(double daydiff, double mean, double stddev) {
+    double u = (daydiff - mean) / stddev;
+    double exponent = -((u * u) / 2);
+    double result = (1 / (stddev * sqrt(2 * M_PI))) * exp(exponent);
+    return result;
 }
 
 void free_map_content(map_t *map) {
