@@ -524,7 +524,7 @@ record_t *record_read(samFile *bam_stream, sam_hdr_t *bam_header, bam1_t *bam_re
     return result;
 }
 
-void add_counts(ndarray_t *table, record_t *record, char **variants, const char *alphabet) {
+void add_counts(ndarray_t *table, record_t *record, char **variants, const char *alphabet, uint w) {
     // ndarray_create(3, ref_size, num_variants, alphabet_size);
     uint *dim_sizes = ndarray_dim_sizes_get(table);
     uint j = 0;
@@ -537,7 +537,7 @@ void add_counts(ndarray_t *table, record_t *record, char **variants, const char 
         for (uint k=0; k < dim_sizes[2]; k++) {
             if (alphabet[k] == record->seq[i]) {
                 c = ndarray_at(table, i, j, k);
-                (*c)++;
+                (*c) += w;
             }
         }
     }

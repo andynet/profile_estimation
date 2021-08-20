@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
         "-m", "../data/test1/subset.meta.tsv",
         "-v", "../data/test1/variants.txt",
         "-l", "../data/test1/lineages.yml",
-        "-o", "../data/test1/output.tsv"
+        "-o", "../data/test1/output_timed.tsv"
     };
     argv = test_argv;
 
@@ -51,8 +51,12 @@ int main(int argc, char** argv) {
         record_t *record = record_read(bam_stream, bam_header, aln, &ret);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
         if (record->variant != NULL) {
-            uint daydiff = get_daydiff(record->id, id2date, "2020-01-01");
-            add_counts(table, record, variants, alphabet);
+            uint daydiff = get_daydiff(record->id, id2date, "2020-03-04");
+            uint weight =
+                    get_gaussian_weight(daydiff, 0, 100)
+                    / get_gaussian_weight(0, 0, 100)
+                    * 100;
+            add_counts(table, record, variants, alphabet, weight);
         }
         record_destroy(record);
         i++;

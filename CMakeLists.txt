@@ -18,7 +18,7 @@ add_executable(run test/run.c)
 target_link_libraries(run ndarray hashing safe_alloc yaml hts m)
 
 add_executable(profile_estimation src/profile_estimation.c)
-target_link_libraries(profile_estimation ndarray hashing safe_alloc yaml hts)
+target_link_libraries(profile_estimation ndarray hashing safe_alloc yaml hts m)
 
 add_executable(timed_profile_estimation src/timed_profile_estimation.c)
-target_link_libraries(timed_profile_estimation ndarray hashing safe_alloc yaml hts)
+target_link_libraries(timed_profile_estimation ndarray hashing safe_alloc yaml hts m)

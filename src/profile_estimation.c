@@ -6,24 +6,26 @@ enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT};
 char **parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
-//    int test_argc = 11;
-//    char *test_argv[] = {
-//        "profile_estimation",
-//        "-b", "../data/test1/subset.bam",
-//        "-m", "../data/test1/subset.meta.tsv",
-//        "-v", "../data/test1/variants.txt",
-//        "-l", "../data/test1/lineages.yml",
-//        "-o", "../data/test1/output.tsv"
-//    };
-//    char **args = parse_args(test_argc, test_argv);
-    char **args = parse_args(argc, argv);
+    int test_argc = 11;
+    char *test_argv[] = {
+        "profile_estimation",
+        "-b", "../data/test1/subset.bam",
+        "-m", "../data/test1/subset.meta.tsv",
+        "-v", "../data/test1/variants.txt",
+        "-l", "../data/test1/lineages.yml",
+        "-o", "../data/test1/output.tsv"
+    };
+    char **args = parse_args(test_argc, test_argv);
+//    char **args = parse_args(argc, argv);
 
     uint num_variants = 0;
     char **variants = NULL;
     load_variants(args[VARIANTS], &variants, &num_variants);
     add_variant(&variants, &num_variants, "other");
 
-    map_t id2pangolin = get_id2pangolin(args[META]);
+    #define ID 0
+    #define PANGOLIN 11
+    map_t id2pangolin = get_tsv_pair_map(args[META], ID, PANGOLIN);
     map_t pangolin2parent = get_pangolin2parent(args[LINEAGES]);
     add_root(pangolin2parent, "other");
     isolate_subclades(pangolin2parent, variants, num_variants);
@@ -45,7 +47,7 @@ int main(int argc, char** argv) {
         record_t *record = record_read(bam_stream, bam_header, aln, &ret);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
         if (record->variant != NULL)
-            add_counts(table, record, variants, alphabet);
+            add_counts(table, record, variants, alphabet, 1);
         record_destroy(record);
         i++;
         if (i % 1000 == 0) printf("Processed %d records.\n", i);
