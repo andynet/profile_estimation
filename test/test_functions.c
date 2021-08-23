@@ -286,23 +286,23 @@ Test(core, add_counts_works_random_check) {
     record_t *record;
 
     record = record_full_create("seq1", "AAAA", "A");
-    add_counts(table, record, variants, alphabet);
+    add_counts(table, record, variants, alphabet, 1);
     record_destroy(record);
 
     record = record_full_create("seq3", "CAAC", "A");
-    add_counts(table, record, variants, alphabet);
+    add_counts(table, record, variants, alphabet, 1);
     record_destroy(record);
 
     record = record_full_create("seq2", "CGTA", "B");
-    add_counts(table, record, variants, alphabet);
+    add_counts(table, record, variants, alphabet, 1);
     record_destroy(record);
 
     record = record_full_create("seq4", ".-NU", "B");
-    add_counts(table, record, variants, alphabet);
+    add_counts(table, record, variants, alphabet, 1);
     record_destroy(record);
 
     record = record_full_create("seq5", "ACGT", "C");
-    add_counts(table, record, variants, alphabet);
+    add_counts(table, record, variants, alphabet, 1);
     record_destroy(record);
 
     cr_assert(*ndarray_at(table, 0, 0, 0) == 1);

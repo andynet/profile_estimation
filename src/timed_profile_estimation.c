@@ -2,20 +2,22 @@
 #include <unistd.h>
 #include "functions.c"
 
-enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT};
+enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT, DATE, STDDEV};
 char **parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    argc = 11;
-    char *test_argv[] = {
-        "profile_estimation",
-        "-b", "../data/test1/subset.bam",
-        "-m", "../data/test1/subset.meta.tsv",
-        "-v", "../data/test1/variants.txt",
-        "-l", "../data/test1/lineages.yml",
-        "-o", "../data/test1/output_timed.tsv"
-    };
-    argv = test_argv;
+//    argc = 15;
+//    char *test_argv[] = {
+//        "timed_profile_estimation",
+//        "-b", "../data/test1/subset.bam",
+//        "-m", "../data/test1/subset.meta.tsv",
+//        "-v", "../data/test1/variants.txt",
+//        "-l", "../data/test1/lineages.yml",
+//        "-o", "../data/test1/output_timed.tsv",
+//        "-d", "2020-03-04",
+//        "-s", "100"
+//    };
+//    argv = test_argv;
 
     char **args = parse_args(argc, argv);
 
@@ -24,11 +26,11 @@ int main(int argc, char** argv) {
     load_variants(args[VARIANTS], &variants, &num_variants);
     add_variant(&variants, &num_variants, "other");
 
-    #define ID 0
-    #define PANGOLIN 11
-    #define DATE 3
-    map_t id2pangolin = get_tsv_pair_map(args[META], ID, PANGOLIN);
-    map_t id2date = get_tsv_pair_map(args[META], ID, DATE);
+    #define ID_COL 0
+    #define PANGOLIN_COL 11
+    #define DATE_COL 3
+    map_t id2pangolin = get_tsv_pair_map(args[META], ID_COL, PANGOLIN_COL);
+    map_t id2date = get_tsv_pair_map(args[META], ID_COL, DATE_COL);
 
     map_t pangolin2parent = get_pangolin2parent(args[LINEAGES]);
     add_root(pangolin2parent, "other");
@@ -51,16 +53,16 @@ int main(int argc, char** argv) {
         record_t *record = record_read(bam_stream, bam_header, aln, &ret);
         record->variant = get_variant(record, id2pangolin, pangolin2parent);
         if (record->variant != NULL) {
-            uint daydiff = get_daydiff(record->id, id2date, "2020-03-04");
+            uint daydiff = get_daydiff(record->id, id2date, args[DATE]);
             uint weight =
-                    get_gaussian_weight(daydiff, 0, 100)
-                    / get_gaussian_weight(0, 0, 100)
-                    * 100;
+                    (uint)((get_gaussian_weight(daydiff, 0, (double)strtol(args[STDDEV], NULL, 10))
+                    / get_gaussian_weight(0, 0, (double)strtol(args[STDDEV], NULL, 10)))
+                    * 1000);
             add_counts(table, record, variants, alphabet, weight);
         }
         record_destroy(record);
         i++;
-        if (i % 1000 == 0) printf("Processed %d records.\n", i);
+        if (i % 1000 == 0) printf("\rProcessed %d records.\n", i);
     }
 
     bam_destroy1(aln);
@@ -88,22 +90,27 @@ void print_usage(char **argv) {
             "-m <metadata.tsv> "
             "-v <variants_file> "
             "-l <lineages.yml> "
-            "-o <output.tsv>\n",
+            "-o <output.tsv> "
+            "-d <date> "
+            "-s <stddev>\n",
             argv[0]
     );
     exit(EXIT_FAILURE);
 }
 
 char **parse_args(int argc, char **argv){
-    char **args = malloc(sizeof (*args) * 5);
+    if (argc != 15) print_usage(argv);
+    char **args = malloc(sizeof (*args) * 7);
     int opt;
-    while ((opt = getopt(argc, argv, "b:m:v:l:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:m:v:l:o:d:s:")) != -1) {
         switch (opt) {
             case 'b': args[BAM] = optarg; break;
             case 'm': args[META] = optarg; break;
             case 'v': args[VARIANTS] = optarg; break;
             case 'l': args[LINEAGES] = optarg; break;
             case 'o': args[OUTPUT] = optarg; break;
+            case 'd': args[DATE] = optarg; break;
+            case 's': args[STDDEV] = optarg; break;
             default : print_usage(argv);
         }
     }
