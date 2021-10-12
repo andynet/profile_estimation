@@ -6,17 +6,17 @@ enum Arguments{BAM=0, META, VARIANTS, LINEAGES, OUTPUT};
 char **parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    int test_argc = 11;
-    char *test_argv[] = {
-        "profile_estimation",
-        "-b", "../data/test1/subset.bam",
-        "-m", "../data/test1/subset.meta.tsv",
-        "-v", "../data/test1/variants.txt",
-        "-l", "../data/test1/lineages.yml",
-        "-o", "../data/test1/output.tsv"
-    };
-    char **args = parse_args(test_argc, test_argv);
-//    char **args = parse_args(argc, argv);
+//    int test_argc = 11;
+//    char *test_argv[] = {
+//        "profile_estimation",
+//        "-b", "../data/test1/subset.bam",
+//        "-m", "../data/test1/subset.meta.tsv",
+//        "-v", "../data/test1/variants.txt",
+//        "-l", "../data/test1/lineages.yml",
+//        "-o", "../data/test1/output.tsv"
+//    };
+//    char **args = parse_args(test_argc, test_argv);
+    char **args = parse_args(argc, argv);
 
     uint num_variants = 0;
     char **variants = NULL;
