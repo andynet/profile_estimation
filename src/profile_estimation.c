@@ -1,3 +1,6 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <htslib/sam.h>
 #include <unistd.h>
 #include "functions.c"

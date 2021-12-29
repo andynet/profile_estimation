@@ -1,6 +1,7 @@
 #ifndef NDARRAY_H
 #define NDARRAY_H
 
+typedef unsigned int uint;
 struct ndarray;
 typedef struct ndarray ndarray_t;
 
