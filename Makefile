@@ -20,6 +20,9 @@ CFLAGS := -Wall -Wextra -march=native -O3
 # wget https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz
 # tar -xvzf yaml-0.2.5.tar.gz
 
+.PHONY: all
+all: build_libs build/profile_estimation build/profile_estimation_timed
+
 .PHONY: build_libs
 build_libs: build/libndarray.a build/libhashing.a build/libsafe_alloc.a
 
@@ -39,10 +42,17 @@ build/libsafe_alloc.a: hashing/src/safe_alloc.c
 	rm build/safe_alloc.o
 
 build/profile_estimation: src/profile_estimation.c
-	$(CC) $(CFLAGS) -o $@ $^ -static \
+	$(CC) $(CFLAGS) -o $@ $^ \
 		-I htslib-1.14 -L htslib-1.14 \
 		-I hashing/src -I src -L build \
-		-L yaml-0.2.5/src/.libs -I yaml-0.2.5/include
+		-I yaml-0.2.5/include -L yaml-0.2.5/src/.libs \
+		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
+
+build/profile_estimation_timed: src/timed_profile_estimation.c
+	$(CC) $(CFLAGS) -o $@ $^ \
+		-I  htslib-1.14 -L htslib-1.14 \
+		-I hashing/src -I src -L build \
+		-I yaml-0.2.5/include -L yaml-0.2.5/src/.libs \
 		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
 
 .PHONY: clean
@@ -52,15 +62,9 @@ clean:
 
 # ndarray_test: test/test_ndarray.c
 # 	gcc -o $@ $^ -lcriterion -lndarray
-# 
+ 
 # test_functions: test/test_functions.c
 # 	gcc -o $@ $^ -lcriterion -lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
-# 
+ 
 # run: test/run.c
-# 	ndarray hashing safe_alloc yaml hts m
-# 
-# profile_estimation: src/profile_estimation.c
-# 	ndarray hashing safe_alloc yaml hts m
-# 
-# timed_profile_estimation: src/timed_profile_estimation.c
 # 	ndarray hashing safe_alloc yaml hts m
