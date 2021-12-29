@@ -21,10 +21,28 @@ CFLAGS := -Wall -Wextra -march=native -O3
 # tar -xvzf yaml-0.2.5.tar.gz
 
 .PHONY: all
-all: build_libs build/profile_estimation build/profile_estimation_timed
+all: build_libs hts yaml build/profile_estimation build/profile_estimation_timed
 
 .PHONY: build_libs
 build_libs: build/libndarray.a build/libhashing.a build/libsafe_alloc.a
+
+.PHONY: hts
+hts:
+	wget https://github.com/samtools/htslib/releases/download/1.14/htslib-1.14.tar.bz2
+	tar -xvjf htslib-1.14.tar.bz2 -C hts
+	rm htslib-1.14.tar.bz2
+	cd hts
+	./configure
+	make
+
+.PHONY: yaml
+yaml:
+	wget https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz
+	tar -xvzf yaml-0.2.5.tar.gz -C yaml
+	rm yaml-0.2.5.tar.gz
+	cd yaml
+	./configure
+	make
 
 build/libndarray.a: src/ndarray.c
 	$(CC) $(CFLAGS) -c $^ -o build/ndarray.o
@@ -43,16 +61,18 @@ build/libsafe_alloc.a: hashing/src/safe_alloc.c
 
 build/profile_estimation: src/profile_estimation.c
 	$(CC) $(CFLAGS) -o $@ $^ \
-		-I htslib-1.14 -L htslib-1.14 \
+		-I hts -L hts \
 		-I hashing/src -I src -L build \
-		-I yaml-0.2.5/include -L yaml-0.2.5/src/.libs \
+		-I yaml/include -L yaml/src/.libs \
+		-Wl,-rpath=hts/libhts.so \
 		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
 
 build/profile_estimation_timed: src/timed_profile_estimation.c
 	$(CC) $(CFLAGS) -o $@ $^ \
-		-I  htslib-1.14 -L htslib-1.14 \
+		-I hts -L hts \
 		-I hashing/src -I src -L build \
-		-I yaml-0.2.5/include -L yaml-0.2.5/src/.libs \
+		-I yaml/include -L yaml/src/.libs \
+		-Wl,-rpath=hts/libhts.so \
 		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
 
 .PHONY: clean
