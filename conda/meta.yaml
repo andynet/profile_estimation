@@ -1,0 +1,36 @@
+{% set version = "1.0.0" %}
+
+package:
+  name: profile
+  version: {{ version }}
+
+build:
+  number: 0
+
+source:
+  url: https://github.com/andynet/profile_estimation/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: 355a379468d5692d08c229685b65c994389be01b93d20b967d54b8baff70083e
+
+requirements:
+  build:
+    - make
+    - {{ compiler('c') }}
+  host:
+    - htslib
+    - ncurses
+    - zlib
+  run:
+    - htslib
+    - ncurses
+    - zlib
+
+about:
+  home: https://github.com/andynet/profile_estimation
+  license: GPLv3
+  license_file: LICENSE
+  summary: Creating profiles
+
+test:
+  commands:
+    - profile_estimation -h
+
