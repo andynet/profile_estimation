@@ -8,8 +8,7 @@ build:
   number: 0
 
 source:
-  url: https://github.com/andynet/profile_estimation/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: 355a379468d5692d08c229685b65c994389be01b93d20b967d54b8baff70083e
+  path: ../
 
 requirements:
   build:

@@ -84,7 +84,7 @@ void print_usage(char **argv) {
             "-o <output.tsv>\n",
             argv[0]
     );
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 char **parse_args(int argc, char **argv){

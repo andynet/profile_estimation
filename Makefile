@@ -47,6 +47,7 @@ yaml:
 	make
 
 build/libndarray.a: src/ndarray.c
+	mkdir -p build
 	$(CC) $(CFLAGS) -c $^ -o build/ndarray.o
 	ar rcs $@ build/ndarray.o
 	rm build/ndarray.o
