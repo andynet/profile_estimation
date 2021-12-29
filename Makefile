@@ -28,8 +28,9 @@ build_libs: build/libndarray.a build/libhashing.a build/libsafe_alloc.a
 
 .PHONY: hts
 hts:
+	mkdir -p hts
 	wget https://github.com/samtools/htslib/releases/download/1.14/htslib-1.14.tar.bz2
-	tar -xvjf htslib-1.14.tar.bz2 -C hts
+	tar -xvjf htslib-1.14.tar.bz2 -C hts --strip-components=1
 	rm htslib-1.14.tar.bz2
 	cd hts
 	./configure
@@ -37,8 +38,9 @@ hts:
 
 .PHONY: yaml
 yaml:
+	mkdir -p yaml
 	wget https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz
-	tar -xvzf yaml-0.2.5.tar.gz -C yaml
+	tar -xvzf yaml-0.2.5.tar.gz -C yaml --strip-components=1
 	rm yaml-0.2.5.tar.gz
 	cd yaml
 	./configure
@@ -64,7 +66,7 @@ build/profile_estimation: src/profile_estimation.c
 		-I hts -L hts \
 		-I hashing/src -I src -L build \
 		-I yaml/include -L yaml/src/.libs \
-		-Wl,-rpath=hts/libhts.so \
+		-Wl,-rpath=$(shell realpath hts/libhts.so) \
 		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
 
 build/profile_estimation_timed: src/timed_profile_estimation.c
@@ -72,7 +74,7 @@ build/profile_estimation_timed: src/timed_profile_estimation.c
 		-I hts -L hts \
 		-I hashing/src -I src -L build \
 		-I yaml/include -L yaml/src/.libs \
-		-Wl,-rpath=hts/libhts.so \
+		-Wl,-rpath=$(shell realpath hts/libhts.so) \
 		-lndarray -lhashing -lsafe_alloc -lyaml -lhts -lm
 
 .PHONY: clean
